@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using CourseWork2.Data;
 using EmploymentAgency.Models;
 using Microsoft.AspNetCore.Identity;
+using CourseWork2.Models;
+using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace CourseWork2.Controllers
 {
@@ -93,10 +96,17 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Post,Info,EducationId,Salary")] Resume resume)
         {
+            Account account = new Account();
+            account = await _context.Accounts
+                .Include(a => a.Resumes)
+                .Include(a => a.EmployerRequests)
+                .FirstOrDefaultAsync(m => m.User == _userManager.GetUserAsync(HttpContext.User).Result);
             resume.DateCreated = DateTime.Now;
             resume.Status = _context.Statuses.Find(1);
             resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
             resume.Education = _context.Educations.Find(resume.EducationId);
+            account.Resumes.Add(resume);
+            _context.Update(account);
             _context.Add(resume);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

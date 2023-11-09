@@ -70,10 +70,17 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,DateCreated,Post,Info,EducationId,Salary")] EmployerRequest employerRequest)
         {
+            Account account = new Account();
+            account = await _context.Accounts
+                .Include(a => a.Resumes)
+                .Include(a => a.EmployerRequests)
+                .FirstOrDefaultAsync(m => m.User == _userManager.GetUserAsync(HttpContext.User).Result);
             employerRequest.DateCreated = DateTime.Now;
             employerRequest.Status = _context.Statuses.Find(1);
             employerRequest.User = _userManager.GetUserAsync(HttpContext.User).Result;
             employerRequest.Education = _context.Educations.Find(employerRequest.EducationId);
+            account.EmployerRequests.Add(employerRequest);
+            _context.Update(account);
             _context.Add(employerRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
