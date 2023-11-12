@@ -1,4 +1,5 @@
-﻿@model IEnumerable<CourseWork2.Models.EmployerRequest>
+﻿
+@model IEnumerable<EmploymentAgency.Models.Resume>
 
 @{
     ViewData["Title"] = "Index";
@@ -12,9 +13,6 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
             <th>
                 @Html.DisplayNameFor(model => model.DateCreated)
             </th>
@@ -30,18 +28,12 @@
             <th>
                 @Html.DisplayNameFor(model => model.Salary)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
         <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.User.Id)
-            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.DateCreated)
             </td>
@@ -52,17 +44,24 @@
                 @Html.DisplayFor(modelItem => item.Info)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Education.Id)
+                @Html.DisplayFor(modelItem => item.Education.Name)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Salary)
             </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Status.Name)
+                </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Status.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                @{int statusColour = Convert.ToInt32(item.Status.Id);}
+                    @if (statusColour == 1)
+                    {
+                        <button style="background-color:red;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                    }else
+                    {
+                        <button style="background-color:green;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                    }
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>
