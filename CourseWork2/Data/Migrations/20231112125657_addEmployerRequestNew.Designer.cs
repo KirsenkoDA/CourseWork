@@ -4,6 +4,7 @@ using CourseWork2.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseWork2.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231112125657_addEmployerRequestNew")]
+    partial class addEmployerRequestNew
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -106,6 +108,55 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnName("date_created");
 
                     b.Property<int>("EducationId")
+                        .HasColumnType("int")
+                        .HasColumnName("education_id");
+
+                    b.Property<string>("Info")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("info");
+
+                    b.Property<string>("Post")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("post");
+
+                    b.Property<float>("Salary")
+                        .HasColumnType("real")
+                        .HasColumnName("salary");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("EducationId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmployerRequests");
+                });
+
+            modelBuilder.Entity("CourseWork2.Models.EmployerRequestNew", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("date_created");
+
+                    b.Property<int>("EducationId")
                         .HasColumnType("int");
 
                     b.Property<string>("Info")
@@ -132,15 +183,13 @@ namespace CourseWork2.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("EducationId");
 
                     b.HasIndex("StatusId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EmployerRequest");
+                    b.ToTable("EmployerRequestNew");
                 });
 
             modelBuilder.Entity("CourseWork2.Models.Service", b =>
@@ -190,7 +239,8 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnName("date_created");
 
                     b.Property<int>("EducationId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("education_id");
 
                     b.Property<string>("Info")
                         .IsRequired()
@@ -207,11 +257,9 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnName("salary");
 
                     b.Property<int>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("status_id");
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -511,6 +559,31 @@ namespace CourseWork2.Data.Migrations
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Education");
+
+                    b.Navigation("Status");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CourseWork2.Models.EmployerRequestNew", b =>
+                {
+                    b.HasOne("EmploymentAgency.Models.Education", "Education")
+                        .WithMany()
+                        .HasForeignKey("EducationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EmploymentAgency.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -538,9 +611,7 @@ namespace CourseWork2.Data.Migrations
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Education");
 

@@ -9,7 +9,7 @@ namespace EmploymentAgency.Models
     public class Resume
     {
         public int Id { get; set; }
-        [Column("user_id")]
+        public string UserId { get; set; }
         public IdentityUser User { get; set; }
         [Column("date_created")]
         public DateTime DateCreated { get; set; }
@@ -20,13 +20,14 @@ namespace EmploymentAgency.Models
         [Column("info")]
         public string Info { get; set; }
         [Display(Name = "Образование")]
-        [Column("education_id")]
         public int EducationId { get; set; }
         public Education Education { get; set; }
         [Display(Name = "Зарплата")]
         [Column("salary")]
         public float Salary { get; set; }
         [Column("status_id")]
+        public int StatusId { get; set; }
         public Status Status { get; set; }
+        public ICollection<Account> Responds { get; set; }
     }
 }
