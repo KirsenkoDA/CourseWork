@@ -16,49 +16,34 @@ namespace CourseWork2.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public ResumesController(ApplicationDbContext context)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public ResumesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
         }
-        //Публикация резюме модератором
-        public async Task<IActionResult> Publish(int? id)
+
+        // GET: Resumes
+        public async Task<IActionResult> Index(int id)
         {
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             if (id == 1)
             {
                 var applicationDbContextFiltered = _context.Resumes
                 .Include(e => e.Education)
                 .Include(e => e.Status)
                 .Include(e => e.User)
-                .Where(e => e.StatusId == 2);
+                .Where(e => e.UserId == identityUser.Id);
                 return View(await applicationDbContextFiltered.ToListAsync());
             }
             else
             {
-                return NotFound();
+                var applicationDbContext = _context.Resumes
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User);
+                return View(await applicationDbContext.ToListAsync());
             }
-            resume.Status = _context.Statuses.Find(2);
-            _context.Update(resume);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Resumes
-        public async Task<IActionResult> Index()
-        {
-            var applicationDbContext = _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
-        }
-        [HttpGet("IndexForEmployer")]
-        public async Task<IActionResult> IndexForEmployer()
-        {
-            var applicationDbContext = _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
         }
 
         // GET: Resumes/Details/5
@@ -71,6 +56,8 @@ namespace CourseWork2.Controllers
 
             var resume = await _context.Resumes
                 .Include(r => r.Education)
+                .Include(r => r.Status)
+                .Include(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (resume == null)
             {
@@ -94,15 +81,14 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Post,Info,EducationId,Salary")] Resume resume)
+        public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
         {
-            resume.DateCreated = DateTime.Now;
-            resume.Status = _context.Statuses.Find(1);
-            resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
-            resume.Education = _context.Educations.Find(resume.EducationId);
-            _context.Add(resume);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                _context.Add(resume);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
             ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", resume.StatusId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", resume.UserId);

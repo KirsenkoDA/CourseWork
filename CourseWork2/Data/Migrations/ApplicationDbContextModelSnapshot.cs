@@ -22,6 +22,21 @@ namespace CourseWork2.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("AccountResume", b =>
+                {
+                    b.Property<int>("RespondsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ResumesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RespondsId", "ResumesId");
+
+                    b.HasIndex("ResumesId");
+
+                    b.ToTable("AccountResume");
+                });
+
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.Property<int>("Id")
@@ -424,6 +439,21 @@ namespace CourseWork2.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AccountResume", b =>
+                {
+                    b.HasOne("CourseWork2.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("RespondsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EmploymentAgency.Models.Resume", null)
+                        .WithMany()
+                        .HasForeignKey("ResumesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -564,8 +594,6 @@ namespace CourseWork2.Data.Migrations
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.Navigation("EmployerRequests");
-
-                    b.Navigation("Resumes");
                 });
 #pragma warning restore 612, 618
         }

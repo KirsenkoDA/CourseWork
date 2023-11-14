@@ -23,8 +23,9 @@ namespace CourseWork2.Controllers
             _context = context;
             _userManager = userManager;
         }
-        //Отклик на вакансию
-        public async Task<IActionResult> Respond(int? id)
+
+        // GET: EmployerRequestNews
+        public async Task<IActionResult> Index(int id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             Account account = new Account();
@@ -33,20 +34,21 @@ namespace CourseWork2.Controllers
                 .FirstOrDefaultAsync(m => m.User == identityUser);
             if (id == null || _context.EmployerRequest == null)
             {
-                return NotFound();
+                var applicationDbContextFiltered = _context.EmployerRequest
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User)
+                .Where(e => e.UserId == identityUser.Id);
+                return View(await applicationDbContextFiltered.ToListAsync());
             }
-
-        // GET: EmployerRequests
-        public async Task<IActionResult> Index()
-        {
-            var applicationDbContext = _context.EmployerRequests.Include(e => e.Education);
-            return View(await applicationDbContext.ToListAsync());
-        }
-        [HttpGet("IndexForApplicant")]
-        public async Task<IActionResult> IndexForApplicant()
-        {
-            var applicationDbContext = _context.EmployerRequests.Include(e => e.Education);
-            return View(await applicationDbContext.ToListAsync());
+            else
+            {
+                var applicationDbContext = _context.EmployerRequest
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User);
+                return View(await applicationDbContext.ToListAsync());
+            }
         }
 
         // GET: EmployerRequestNews/Details/5
@@ -59,6 +61,8 @@ namespace CourseWork2.Controllers
 
             var employerRequestNew = await _context.EmployerRequest
                 .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (employerRequestNew == null)
             {
@@ -82,17 +86,18 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,DateCreated,Post,Info,EducationId,Salary")] EmployerRequest employerRequest)
+        public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest employerRequestNew)
         {
-            employerRequest.DateCreated = DateTime.Now;
-            employerRequest.Status = _context.Statuses.Find(1);
-            employerRequest.User = _userManager.GetUserAsync(HttpContext.User).Result;
-            employerRequest.Education = _context.Educations.Find(employerRequest.EducationId);
-            _context.Add(employerRequest);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", employerRequest.EducationId);
-            return View(employerRequest);
+            //if (ModelState.IsValid)
+            //{
+                _context.Add(employerRequestNew);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            //}
+            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", employerRequestNew.EducationId);
+            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", employerRequestNew.StatusId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", employerRequestNew.UserId);
+            return View(employerRequestNew);
         }
 
         // GET: EmployerRequestNews/Edit/5
