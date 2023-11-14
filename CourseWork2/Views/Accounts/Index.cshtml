@@ -13,7 +13,7 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Info)
+                Профиль
             </th>
             <th></th>
         </tr>
@@ -22,15 +22,31 @@
 @foreach (var item in Model) {
         <tr>
             <td>
+                <h2>Информация</h2>
                 @Html.DisplayFor(modelItem => item.Info)
             </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Resumes)
-                </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h2>Созданные Резюме</h2>
+                @foreach (var resume in item.Resumes)
+                {
+                    <p>@resume.Post</p>
+                }
+                @Html.DisplayFor(modelItem => item.Resumes)
+            </td>
+            <td>
+                <h2>Созданные вакансии</h2>
+                @foreach (var employerRequest in item.EmployerRequests)
+                {
+                    <p>@employerRequest.Post</p>
+                }
+                @Html.DisplayFor(modelItem => item.Resumes)
             </td>
         </tr>
 }

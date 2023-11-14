@@ -4,6 +4,7 @@ using CourseWork2.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseWork2.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231109115223_addRespondsToResumes")]
+    partial class addRespondsToResumes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +23,21 @@ namespace CourseWork2.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("AccountResume", b =>
+                {
+                    b.Property<int>("RespondsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ResumesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RespondsId", "ResumesId");
+
+                    b.HasIndex("ResumesId");
+
+                    b.ToTable("AccountResume");
+                });
 
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
@@ -83,12 +100,16 @@ namespace CourseWork2.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2")
                         .HasColumnName("date_created");
 
                     b.Property<int>("EducationId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("education_id");
 
                     b.Property<string>("Info")
                         .IsRequired()
@@ -105,14 +126,14 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnName("salary");
 
                     b.Property<int>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("status_id");
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
 
                     b.HasIndex("EducationId");
 
@@ -120,7 +141,7 @@ namespace CourseWork2.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EmployerRequest");
+                    b.ToTable("EmployerRequests");
                 });
 
             modelBuilder.Entity("CourseWork2.Models.Service", b =>
@@ -170,7 +191,8 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnName("date_created");
 
                     b.Property<int>("EducationId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("education_id");
 
                     b.Property<string>("Info")
                         .IsRequired()
@@ -187,11 +209,9 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnName("salary");
 
                     b.Property<int>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("status_id");
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -424,6 +444,21 @@ namespace CourseWork2.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AccountResume", b =>
+                {
+                    b.HasOne("CourseWork2.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("RespondsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EmploymentAgency.Models.Resume", null)
+                        .WithMany()
+                        .HasForeignKey("ResumesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -458,6 +493,10 @@ namespace CourseWork2.Data.Migrations
 
             modelBuilder.Entity("CourseWork2.Models.EmployerRequest", b =>
                 {
+                    b.HasOne("CourseWork2.Models.Account", null)
+                        .WithMany("EmployerRequests")
+                        .HasForeignKey("AccountId");
+
                     b.HasOne("EmploymentAgency.Models.Education", "Education")
                         .WithMany()
                         .HasForeignKey("EducationId")
@@ -472,9 +511,7 @@ namespace CourseWork2.Data.Migrations
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Education");
 
@@ -499,9 +536,7 @@ namespace CourseWork2.Data.Migrations
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Education");
 
@@ -564,8 +599,6 @@ namespace CourseWork2.Data.Migrations
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.Navigation("EmployerRequests");
-
-                    b.Navigation("Resumes");
                 });
 #pragma warning restore 612, 618
         }

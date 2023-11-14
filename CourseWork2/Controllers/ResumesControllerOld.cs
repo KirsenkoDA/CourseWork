@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Контроллер резюме
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,20 +10,45 @@ using CourseWork2.Data;
 using EmploymentAgency.Models;
 using Microsoft.AspNetCore.Identity;
 using CourseWork2.Models;
+using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace CourseWork2.Controllers
 {
-    public class ResumesController : Controller
+    public class ResumesControllerOld : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public ResumesController(ApplicationDbContext context)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public ResumesControllerOld(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
         //Публикация резюме модератором
         public async Task<IActionResult> Publish(int? id)
         {
+            if (id == null || _context.Resumes == null)
+            {
+                return NotFound();
+            }
+
+            var resume = await _context.Resumes.FindAsync(id);
+            if (resume == null)
+            {
+                return NotFound();
+            }
+            resume.Status = _context.Statuses.Find(2);
+            _context.Update(resume);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Resumes
+        public async Task<IActionResult> Index(int id)
+        {
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             if (id == 1)
             {
                 var applicationDbContextFiltered = _context.Resumes
@@ -34,31 +60,12 @@ namespace CourseWork2.Controllers
             }
             else
             {
-                return NotFound();
+                var applicationDbContext = _context.Resumes
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User);
+                return View(await applicationDbContext.ToListAsync());
             }
-            resume.Status = _context.Statuses.Find(2);
-            _context.Update(resume);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Resumes
-        public async Task<IActionResult> Index()
-        {
-            var applicationDbContext = _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
-        }
-        [HttpGet("IndexForEmployer")]
-        public async Task<IActionResult> IndexForEmployer()
-        {
-            var applicationDbContext = _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
         }
 
         // GET: Resumes/Details/5
@@ -84,8 +91,6 @@ namespace CourseWork2.Controllers
         public IActionResult Create()
         {
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name");
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName");
             return View();
         }
 
@@ -96,16 +101,21 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Post,Info,EducationId,Salary")] Resume resume)
         {
+            Account account = new Account();
+            account = await _context.Accounts
+                .Include(a => a.Resumes)
+                .Include(a => a.EmployerRequests)
+                .FirstOrDefaultAsync(m => m.User == _userManager.GetUserAsync(HttpContext.User).Result);
             resume.DateCreated = DateTime.Now;
             resume.Status = _context.Statuses.Find(1);
             resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
             resume.Education = _context.Educations.Find(resume.EducationId);
+            account.Resumes.Add(resume);
+            _context.Update(account);
             _context.Add(resume);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", resume.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", resume.UserId);
             return View(resume);
         }
 
@@ -123,8 +133,6 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
             return View(resume);
         }
 
@@ -133,36 +141,34 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,DateCreated,Post,Info,EducationId,Salary")] Resume resume)
         {
             if (id != resume.Id)
             {
                 return NotFound();
             }
-
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    _context.Update(resume);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ResumeExists(resume.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                resume.DateCreated = DateTime.Now;
+                resume.Status = _context.Statuses.Find(1);
+                resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
+                resume.Education = _context.Educations.Find(resume.EducationId);
+                _context.Update(resume);
+                await _context.SaveChangesAsync();
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ResumeExists(resume.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
             return View(resume);
         }
 
@@ -176,8 +182,6 @@ namespace CourseWork2.Controllers
 
             var resume = await _context.Resumes
                 .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (resume == null)
             {

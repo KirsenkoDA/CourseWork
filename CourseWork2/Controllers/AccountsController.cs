@@ -23,7 +23,8 @@ namespace CourseWork2.Controllers
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Accounts
-                .Include(r => r.Resumes);
+                .Include(r => r.Resumes)
+                .Include(r => r.EmployerRequests);
             return View(await applicationDbContext.ToListAsync());
         }
 
