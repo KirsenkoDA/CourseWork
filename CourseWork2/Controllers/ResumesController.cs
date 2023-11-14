@@ -21,6 +21,48 @@ namespace CourseWork2.Controllers
         public ResumesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
+        }
+        //Отклик на резюме
+        public async Task<IActionResult> Respond(int? id)
+        {
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            Account account = new Account();
+            account = await _context.Accounts
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(m => m.User == identityUser);
+            if (id == null || _context.Resumes == null)
+            {
+                return NotFound();
+            }
+
+            var resume = await _context.Resumes.Include(a => a.Responds).FirstOrDefaultAsync(m => m.Id == id);
+            if (resume == null)
+            {
+                return NotFound();
+            }
+            resume.Responds.Add(account);
+            _context.Update(resume);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        //Публикация резюме модератором
+        public async Task<IActionResult> Publish(int? id)
+        {
+            if (id == null || _context.Resumes == null)
+            {
+                return NotFound();
+            }
+
+            var resume = await _context.Resumes.FindAsync(id);
+            if (resume == null)
+            {
+                return NotFound();
+            }
+            resume.Status = _context.Statuses.Find(2);
+            _context.Update(resume);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Resumes
@@ -41,7 +83,8 @@ namespace CourseWork2.Controllers
                 var applicationDbContext = _context.Resumes
                 .Include(e => e.Education)
                 .Include(e => e.Status)
-                .Include(e => e.User);
+                .Include(e => e.User)
+                .Where(e => e.StatusId == 2);
                 return View(await applicationDbContext.ToListAsync());
             }
         }
@@ -55,9 +98,10 @@ namespace CourseWork2.Controllers
             }
 
             var resume = await _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User)
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User)
+                .Include(e => e.Responds).ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (resume == null)
             {
@@ -83,12 +127,23 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(resume);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
+            //if (ModelState.IsValid)
+            //{
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            Account account = new Account();
+            account = await _context.Accounts
+                .Include(a => a.Resumes)
+                .FirstOrDefaultAsync(m => m.User == identityUser);
+            resume.DateCreated = DateTime.Now;
+            resume.Status = _context.Statuses.Find(1);
+            resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
+            resume.Education = _context.Educations.Find(resume.EducationId);
+            account.Resumes.Add(resume);
+            _context.Update(account);
+            _context.Add(resume);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+            //}
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
             ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", resume.StatusId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", resume.UserId);

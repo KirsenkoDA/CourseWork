@@ -55,6 +55,14 @@
     </dl>
 </div>
 <div>
+    @foreach (var responds in Model.Responds)
+    {
+        <p>@responds.User.UserName</p>
+    }
+</div>
+<div>
+    <button style="background-color: green"><a asp-action="Publish" asp-route-id="@Model?.Id">Publish</a></button> |
+    <button style="background-color: red"><a asp-action="Delete" asp-route-id="@Model.Id">Delete</a></button> |
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
