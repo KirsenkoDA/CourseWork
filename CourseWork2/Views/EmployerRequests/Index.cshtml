@@ -49,6 +49,21 @@
                 @Html.DisplayFor(modelItem => item.Salary)
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.Status.Id)
+            </td>
+            <td>
+                    @{
+                        int statusColour = Convert.ToInt32(item.Status.Id);
+                    }
+                    @if (statusColour == 1)
+                    {
+                        <button style="background-color:red;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                    }
+                    else
+                    {
+                        <button style="background-color:green;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                    }
+                <a asp-action="Respond" asp-route-id="@item.Id">Respond</a> |
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>

@@ -28,5 +28,6 @@ namespace CourseWork2.Models
         public float Salary { get; set; }
         [Column("status_id")]
         public Status Status { get; set; }
+        public ICollection<Account> Responds { get; set; }
     }
 }

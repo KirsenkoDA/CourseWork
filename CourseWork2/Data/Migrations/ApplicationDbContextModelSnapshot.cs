@@ -22,6 +22,36 @@ namespace CourseWork2.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("AccountEmployerRequest", b =>
+                {
+                    b.Property<int>("EmployerRequestsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RespondsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EmployerRequestsId", "RespondsId");
+
+                    b.HasIndex("RespondsId");
+
+                    b.ToTable("AccountEmployerRequest");
+                });
+
+            modelBuilder.Entity("AccountResume", b =>
+                {
+                    b.Property<int>("RespondsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ResumesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RespondsId", "ResumesId");
+
+                    b.HasIndex("ResumesId");
+
+                    b.ToTable("AccountResume");
+                });
+
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.Property<int>("Id")
@@ -83,9 +113,6 @@ namespace CourseWork2.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int?>("AccountId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2")
                         .HasColumnName("date_created");
@@ -115,8 +142,6 @@ namespace CourseWork2.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
 
                     b.HasIndex("EducationId");
 
@@ -432,6 +457,36 @@ namespace CourseWork2.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AccountEmployerRequest", b =>
+                {
+                    b.HasOne("CourseWork2.Models.EmployerRequest", null)
+                        .WithMany()
+                        .HasForeignKey("EmployerRequestsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CourseWork2.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("RespondsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AccountResume", b =>
+                {
+                    b.HasOne("CourseWork2.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("RespondsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EmploymentAgency.Models.Resume", null)
+                        .WithMany()
+                        .HasForeignKey("ResumesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CourseWork2.Models.Account", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -466,10 +521,6 @@ namespace CourseWork2.Data.Migrations
 
             modelBuilder.Entity("CourseWork2.Models.EmployerRequest", b =>
                 {
-                    b.HasOne("CourseWork2.Models.Account", null)
-                        .WithMany("EmployerRequests")
-                        .HasForeignKey("AccountId");
-
                     b.HasOne("EmploymentAgency.Models.Education", "Education")
                         .WithMany()
                         .HasForeignKey("EducationId")
@@ -571,13 +622,6 @@ namespace CourseWork2.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("CourseWork2.Models.Account", b =>
-                {
-                    b.Navigation("EmployerRequests");
-
-                    b.Navigation("Resumes");
                 });
 #pragma warning restore 612, 618
         }

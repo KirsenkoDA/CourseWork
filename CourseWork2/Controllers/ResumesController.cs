@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using CourseWork2.Data;
 using EmploymentAgency.Models;
 using Microsoft.AspNetCore.Identity;
+using CourseWork2.Models;
 
 namespace CourseWork2.Controllers
 {
@@ -20,44 +21,28 @@ namespace CourseWork2.Controllers
         public ResumesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
-            _userManager = userManager;
-        }
-        //Публикация резюме модератором
-        public async Task<IActionResult> Publish(int? id)
-        {
-            if (id == null || _context.Resumes == null)
-            {
-                return NotFound();
-            }
-
-            var resume = await _context.Resumes.FindAsync(id);
-            if (resume == null)
-            {
-                return NotFound();
-            }
-            resume.Status = _context.Statuses.Find(2);
-            _context.Update(resume);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
 
         // GET: Resumes
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
-        }
-        [HttpGet("IndexForEmployer")]
-        public async Task<IActionResult> IndexForEmployer()
-        {
-            var applicationDbContext = _context.Resumes
-                .Include(r => r.Education)
-                .Include(r => r.Status)
-                .Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
+            if (id == 1)
+            {
+                var applicationDbContextFiltered = _context.Resumes
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User)
+                .Where(e => e.StatusId == 2);
+                return View(await applicationDbContextFiltered.ToListAsync());
+            }
+            else
+            {
+                var applicationDbContext = _context.Resumes
+                .Include(e => e.Education)
+                .Include(e => e.Status)
+                .Include(e => e.User);
+                return View(await applicationDbContext.ToListAsync());
+            }
         }
 
         // GET: Resumes/Details/5
@@ -70,6 +55,8 @@ namespace CourseWork2.Controllers
 
             var resume = await _context.Resumes
                 .Include(r => r.Education)
+                .Include(r => r.Status)
+                .Include(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (resume == null)
             {
@@ -91,15 +78,14 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Post,Info,EducationId,Salary")] Resume resume)
+        public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
         {
-            resume.DateCreated = DateTime.Now;
-            resume.Status = _context.Statuses.Find(1);
-            resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
-            resume.Education = _context.Educations.Find(resume.EducationId);
-            _context.Add(resume);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                _context.Add(resume);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
             return View(resume);
         }
