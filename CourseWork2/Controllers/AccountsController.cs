@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CourseWork2.Data;
 using CourseWork2.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace CourseWork2.Controllers
 {
@@ -14,18 +15,45 @@ namespace CourseWork2.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public AccountsController(ApplicationDbContext context)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public AccountsController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
-
-        // GET: Accounts
-        public async Task<IActionResult> Index()
+        //Аккаунт который видит владелец резме или вакансии
+        public async Task<IActionResult> AccountPreview(string id)
         {
-            var applicationDbContext = _context.Accounts
-                .Include(r => r.Resumes)
-                .Include(r => r.EmployerRequests);
-            return View(await applicationDbContext.ToListAsync());
+ 
+            var applicationDbContextFiltered = _context.Accounts
+            .Include(e => e.EmployerRequests)
+            .Include(e => e.Resumes)
+            .Include(e => e.User)
+            .Where(e => e.User.Id == id);
+            return View(await applicationDbContextFiltered.ToListAsync());
+        }
+        // GET: Accounts
+        public async Task<IActionResult> Index(int id)
+        {
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            if (id == 1)
+            {
+                var applicationDbContextFiltered = _context.Accounts
+                .Include(e => e.EmployerRequests)
+                .Include(e => e.Resumes)
+                .Include(e => e.User)
+                .Where(e => e.User.Id == identityUser.Id);
+                return View(await applicationDbContextFiltered.ToListAsync());
+            }
+            else
+            {
+                var applicationDbContextFiltered = _context.Accounts
+                .Include(e => e.EmployerRequests)
+                .Include(e => e.Resumes)
+                .Include(e => e.User);
+                return View(await applicationDbContextFiltered.ToListAsync());
+            }
         }
 
         // GET: Accounts/Details/5

@@ -57,7 +57,10 @@
 <div>
     @foreach (var responds in Model.Responds)
     {
-        <p>@responds.User.UserName</p>
+        <p>
+            @responds.User.UserName
+            <a asp-controller="Accounts" asp-action="AccountPreview" asp-route-id="@responds.User.Id">Профиль</a>
+        </p>
     }
 </div>
 <div>
