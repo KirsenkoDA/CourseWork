@@ -192,20 +192,36 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
         {
-            Resume resumeOld = new Resume();
-            resumeOld = await _context.Resumes
-                .Include(a => a.Responds)
-                .Include(a => a.Status)
-                .Include(a => a.Education)
-                .FirstOrDefaultAsync(m => m.Id == resume.Id);
-            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            resume.DateCreated = DateTime.Now;
-            resume.Status = _context.Statuses.Find(1);
-            resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
-            resume.Responds = resumeOld.Responds;
-            _context.Update(resume);
-            await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+            if (id != resume.Id)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingResume = await _context.Resumes
+                    .Include(a => a.Responds)
+                    .FirstOrDefaultAsync(m => m.Id == resume.Id);
+                existingResume.Status = _context.Statuses.Find(1);
+                existingResume.Post = resume.Post;
+                existingResume.Info = resume.Info;
+                existingResume.EducationId = resume.EducationId;
+                existingResume.Salary = resume.Salary;
+                _context.Update(existingResume);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ResumeExists(resume.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Resumes/Delete/5

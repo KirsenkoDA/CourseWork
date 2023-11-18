@@ -106,8 +106,6 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
                 try
                 {
                     _context.Update(resume);
@@ -125,7 +123,7 @@ namespace CourseWork2.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
+
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
             ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
