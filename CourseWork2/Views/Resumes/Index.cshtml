@@ -3,8 +3,19 @@
 @{
     ViewData["Title"] = "Index";
 }
-
-<h1>Список резюме</h1>
+@{
+    int filteredValue;
+}
+    @if (ViewData["filteredValues"] == null)
+    {
+        filteredValue = 0;
+        <h1>Список резюме</h1>
+    }
+    else
+    {
+        filteredValue = 1;
+        <h1>Мои резюме</h1>
+    }
 
 <p>
     <button type="button" class="btn btn-success"><a asp-action="Create" >Create New</a></button>
@@ -61,34 +72,40 @@
                 @Html.DisplayFor(modelItem => item.Status.Name)
             </td>
             <td>
-                    @*@{
+                    @{
                         int statusColour = Convert.ToInt32(item.Status.Id);
                     }
-                    @if (statusColour == 1)
+                    @if (User.IsInRole("MODERATOR"))
                     {
-                        <button style="background-color:red;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                        if (statusColour == 1)
+                        {
+                            <button style="background-color:red;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                        }
+                        else
+                        {
+                            <button style="background-color:green;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
+                        }
                     }
-                    else
-                    {
-                        <button style="background-color:green;"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
-                    }*@
-                    <button type="button" class="btn btn-warning"><a asp-action="Details" asp-route-id="@item.Id">Details</a></button>
                     @inject UserManager<IdentityUser> UserManager
                     @{
                         var currentUser = await UserManager.GetUserAsync(User);
                         var currentUserId = currentUser.Id;
                     }
-                   @* Если резюме принадлежат пользователю, то он может их изменять и удалять*@
-                    @if (item.User.Id == currentUserId)
+                    @if (User.IsInRole("CLIENT"))
                     {
-                        <button type="button" class="btn btn-primary"><a asp-action="Edit" asp-route-id="@item.Id">Edit</a></button>
-                        <button type="button" class="btn btn-danger"><a asp-action="Delete" asp-route-id="@item.Id">Delete</a></button>
+                        //Если резюме принадлежат пользователю, то он может их изменять и удалять
+                        if (item.User.Id == currentUserId)
+                        {
+                            <a class="text-white" asp-action="Edit" asp-route-id="@item.Id"><button type="button" class="btn btn-primary">Edit</button></a>
+                            <a class ="text-white" asp-action="Delete" asp-route-id="@item.Id"><button type="button" class="btn btn-danger">Delete</button></a>
+                        }
+                        //Если резюме принадлежит пользователю, то он не может откликаться
+                        else
+                        {
+                            <a class="text-white" asp-action="Respond" asp-route-id="@item.Id"><button type="button" class="btn btn-success">Respond</button></a>
+                        }
                     }
-                    @*Если резюме принадлежит пользователю, то он не может откликаться*@
-                    @if (item.User.Id != currentUserId)
-                    {
-                        <button type="button" class="btn btn-success"><a asp-action="Respond" asp-route-id="@item.Id">Respond</a></button>
-                    }
+                    <a asp-action="Details" asp-route-id="@item.Id"><button type="button" class="btn btn-warning">Details</button></a>
             </td>
         </tr>
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CourseWork2.Data;
 using EmploymentAgency.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CourseWork2.Controllers
 {
@@ -20,6 +21,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Status
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Index()
         {
               return _context.Statuses != null ? 
@@ -28,6 +30,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Status/Details/5
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Statuses == null)
@@ -46,6 +49,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Status/Create
+        [Authorize(Roles = "MODERATOR")]
         public IActionResult Create()
         {
             return View();
@@ -56,6 +60,7 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Create([Bind("Id,Name")] Status status)
         {
             if (ModelState.IsValid)
@@ -68,6 +73,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Status/Edit/5
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Statuses == null)
@@ -88,6 +94,7 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Status status)
         {
             if (id != status.Id)
@@ -119,6 +126,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Status/Delete/5
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Statuses == null)
@@ -139,6 +147,7 @@ namespace CourseWork2.Controllers
         // POST: Status/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Statuses == null)

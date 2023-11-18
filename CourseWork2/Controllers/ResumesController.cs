@@ -10,6 +10,8 @@ using EmploymentAgency.Models;
 using Microsoft.AspNetCore.Identity;
 using CourseWork2.Models;
 using NuGet.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using NUnit.Framework;
 
 namespace CourseWork2.Controllers
 {
@@ -25,6 +27,7 @@ namespace CourseWork2.Controllers
             _userManager = userManager;
         }
         //Отклик на резюме
+        [Authorize]
         public async Task<IActionResult> Respond(int? id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
@@ -48,6 +51,7 @@ namespace CourseWork2.Controllers
             return RedirectToAction(nameof(Index));
         }
         //Публикация резюме модератором
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Publish(int? id)
         {
             if (id == null || _context.Resumes == null)
@@ -67,20 +71,26 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Resumes
-        public async Task<IActionResult> Index(int id)
+        [Authorize]
+        public async Task<IActionResult> Index(int Id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            if (id == 1)
+            if (Id == 1)
             {
+                //Для соискателя
+                //Фильтр по текущему пользователю "Мои резюме"
                 var applicationDbContextFiltered = _context.Resumes
                     .Include(e => e.Education)
                     .Include(e => e.Status)
                     .Include(e => e.User)
                     .Where(e => e.UserId == identityUser.Id).ToList();
+                ViewData["filteredValues"] = Id;
                 return View(applicationDbContextFiltered);
             }
             else
             {
+                //Для работодателя
+                //Выборка всех значений со статусом "Опубликовано"
                 var applicationDbContext = _context.Resumes
                     .Include(e => e.Education)
                     .Include(e => e.Status)
@@ -92,6 +102,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Resumes/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Resumes == null)
@@ -112,8 +123,8 @@ namespace CourseWork2.Controllers
 
             return View(resume);
         }
-
         // GET: Resumes/Create
+        [Authorize]
         public IActionResult Create()
         {
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name");
@@ -125,6 +136,7 @@ namespace CourseWork2.Controllers
         // POST: Resumes/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
@@ -132,19 +144,19 @@ namespace CourseWork2.Controllers
             //if (ModelState.IsValid)
             //{
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            Account account = new Account();
-            account = await _context.Accounts
-                .Include(a => a.Resumes)
-                .FirstOrDefaultAsync(m => m.User == identityUser);
+            //Account account = new Account();
+            //account = await _context.Accounts
+            //    .Include(a => a.Resumes)
+            //    .FirstOrDefaultAsync(m => m.User == identityUser);
             resume.DateCreated = DateTime.Now;
             resume.Status = _context.Statuses.Find(1);
             resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
             resume.Education = _context.Educations.Find(resume.EducationId);
-            account.Resumes.Add(resume);
-            _context.Update(account);
+            //account.Resumes.Add(resume);
+            //_context.Update(account);
             _context.Add(resume);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", new { id = 1 });
             //}
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
             ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", resume.StatusId);
@@ -153,6 +165,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Resumes/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Resumes == null)
@@ -174,58 +187,29 @@ namespace CourseWork2.Controllers
         // POST: Resumes/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume1)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
         {
-            //if (id != resume.Id)
-            //{
-            //    return NotFound();
-            //}
-
-            // if (ModelState.IsValid)
-            // {
-            // try
-            //{
-            Resume resume = new Resume();
-            resume = resume1;
+            Resume resumeOld = new Resume();
+            resumeOld = await _context.Resumes
+                .Include(a => a.Responds)
+                .Include(a => a.Status)
+                .Include(a => a.Education)
+                .FirstOrDefaultAsync(m => m.Id == resume.Id);
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            Account account = new Account();
-            account = await _context.Accounts
-                .Include(a => a.Resumes)
-                .FirstOrDefaultAsync(m => m.User == identityUser);
             resume.DateCreated = DateTime.Now;
             resume.Status = _context.Statuses.Find(1);
             resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
-            resume.Education = _context.Educations.Find(resume.EducationId);
-            Resume resume2 = new Resume();
-            //resume.Responds = (ICollection<Account>)resume2.Responds.FirstOrDefault(n => n.Id == resume.Id);
-            account.Resumes.Add(resume);
-            _context.Update(account);
-            _context.Add(resume);
+            resume.Responds = resumeOld.Responds;
             _context.Update(resume);
             await _context.SaveChangesAsync();
-                //}
-               // catch (DbUpdateConcurrencyException)
-               // {
-                 //   if (!ResumeExists(resume.Id))
-                   // {
-                    //    return NotFound();
-                   // }
-                    //else
-                   //{
-                   //     throw;
-                   // }
-                //}
                 return RedirectToAction(nameof(Index));
-           // }
-            //ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
-           // ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
-           // ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
-            //return View(resume);
         }
 
         // GET: Resumes/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Resumes == null)
@@ -247,6 +231,7 @@ namespace CourseWork2.Controllers
         }
 
         // POST: Resumes/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

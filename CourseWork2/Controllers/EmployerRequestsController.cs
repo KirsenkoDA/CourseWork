@@ -12,6 +12,7 @@ using EmploymentAgency.Models;
 using Microsoft.AspNetCore.Routing;
 using NuGet.ContentModel;
 using NUnit.Framework;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CourseWork2.Controllers
 {
@@ -27,6 +28,7 @@ namespace CourseWork2.Controllers
             _userManager = userManager;
         }
         //Отклик на вакансию
+        [Authorize]
         public async Task<IActionResult> Respond(int? id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
@@ -50,6 +52,7 @@ namespace CourseWork2.Controllers
             return RedirectToAction(nameof(Index));
         }
         //Публикация резюме модератором
+        [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Publish(int? id)
         {
             if (id == null || _context.EmployerRequest == null)
@@ -68,6 +71,7 @@ namespace CourseWork2.Controllers
             return RedirectToAction(nameof(Index));
         }
         // GET: EmployerRequestNews
+        [Authorize]
         public async Task<IActionResult> Index(int id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
@@ -98,6 +102,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: EmployerRequestNews/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.EmployerRequest == null)
@@ -120,6 +125,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: EmployerRequestNews/Create
+        [Authorize]
         public IActionResult Create()
         {
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name");
@@ -133,21 +139,21 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest employerRequest)
         {
 
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            Account account = new Account();
-            account = await _context.Accounts
-                .Include(a => a.EmployerRequests)
-                .FirstOrDefaultAsync(m => m.User == identityUser);
+            //Account account = new Account();
+            //account = await _context.Accounts
+            //    .Include(a => a.EmployerRequests)
+            //    .FirstOrDefaultAsync(m => m.User == identityUser);
             employerRequest.DateCreated = DateTime.Now;
             employerRequest.Status = _context.Statuses.Find(1);
             employerRequest.User = identityUser;
             employerRequest.Education = _context.Educations.Find(employerRequest.EducationId);
-            account.EmployerRequests.Add(employerRequest);
-            _context.Update(account);
+            //account.EmployerRequests.Add(employerRequest);
+            //_context.Update(account);
             _context.Add(employerRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -155,6 +161,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: EmployerRequestNews/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.EmployerRequest == null)
@@ -172,10 +179,7 @@ namespace CourseWork2.Controllers
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", employerRequestNew.UserId);
             return View(employerRequestNew);
         }
-
-        // POST: EmployerRequestNews/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest employerRequestNew)
@@ -212,6 +216,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: EmployerRequestNews/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.EmployerRequest == null)
@@ -235,6 +240,7 @@ namespace CourseWork2.Controllers
         // POST: EmployerRequestNews/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.EmployerRequest == null)
