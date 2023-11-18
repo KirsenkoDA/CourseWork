@@ -9,6 +9,7 @@ using CourseWork2.Data;
 using EmploymentAgency.Models;
 using Microsoft.AspNetCore.Identity;
 using CourseWork2.Models;
+using NuGet.Versioning;
 
 namespace CourseWork2.Controllers
 {
@@ -72,20 +73,21 @@ namespace CourseWork2.Controllers
             if (id == 1)
             {
                 var applicationDbContextFiltered = _context.Resumes
-                .Include(e => e.Education)
-                .Include(e => e.Status)
-                .Include(e => e.User)
-                .Where(e => e.UserId == identityUser.Id);
-                return View(await applicationDbContextFiltered.ToListAsync());
+                    .Include(e => e.Education)
+                    .Include(e => e.Status)
+                    .Include(e => e.User)
+                    .Where(e => e.UserId == identityUser.Id).ToList();
+                return View(applicationDbContextFiltered);
             }
             else
             {
                 var applicationDbContext = _context.Resumes
-                .Include(e => e.Education)
-                .Include(e => e.Status)
-                .Include(e => e.User)
-                .Where(e => e.StatusId == 2);
-                return View(await applicationDbContext.ToListAsync());
+                    .Include(e => e.Education)
+                    .Include(e => e.Status)
+                    .Include(e => e.User)
+                    .Where(e => e.StatusId == 2)
+                    .ToList();
+                return View(applicationDbContext);
             }
         }
 
@@ -163,9 +165,9 @@ namespace CourseWork2.Controllers
             {
                 return NotFound();
             }
-            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
+            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
+            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", resume.StatusId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", resume.UserId);
             return View(resume);
         }
 
@@ -174,37 +176,53 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume1)
         {
-            if (id != resume.Id)
-            {
-                return NotFound();
-            }
+            //if (id != resume.Id)
+            //{
+            //    return NotFound();
+            //}
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(resume);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ResumeExists(resume.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+            // if (ModelState.IsValid)
+            // {
+            // try
+            //{
+            Resume resume = new Resume();
+            resume = resume1;
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            Account account = new Account();
+            account = await _context.Accounts
+                .Include(a => a.Resumes)
+                .FirstOrDefaultAsync(m => m.User == identityUser);
+            resume.DateCreated = DateTime.Now;
+            resume.Status = _context.Statuses.Find(1);
+            resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
+            resume.Education = _context.Educations.Find(resume.EducationId);
+            Resume resume2 = new Resume();
+            //resume.Responds = (ICollection<Account>)resume2.Responds.FirstOrDefault(n => n.Id == resume.Id);
+            account.Resumes.Add(resume);
+            _context.Update(account);
+            _context.Add(resume);
+            _context.Update(resume);
+            await _context.SaveChangesAsync();
+                //}
+               // catch (DbUpdateConcurrencyException)
+               // {
+                 //   if (!ResumeExists(resume.Id))
+                   // {
+                    //    return NotFound();
+                   // }
+                    //else
+                   //{
+                   //     throw;
+                   // }
+                //}
                 return RedirectToAction(nameof(Index));
-            }
-            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
-            return View(resume);
+           // }
+            //ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", resume.EducationId);
+           // ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", resume.StatusId);
+           // ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", resume.UserId);
+            //return View(resume);
         }
 
         // GET: Resumes/Delete/5

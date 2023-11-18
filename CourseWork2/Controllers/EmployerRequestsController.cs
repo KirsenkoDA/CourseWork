@@ -9,6 +9,9 @@ using CourseWork2.Data;
 using CourseWork2.Models;
 using Microsoft.AspNetCore.Identity;
 using EmploymentAgency.Models;
+using Microsoft.AspNetCore.Routing;
+using NuGet.ContentModel;
+using NUnit.Framework;
 
 namespace CourseWork2.Controllers
 {
@@ -130,10 +133,10 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest employerRequest)
         {
-            //if (ModelState.IsValid)
-            //{
+
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             Account account = new Account();
             account = await _context.Accounts
@@ -148,11 +151,7 @@ namespace CourseWork2.Controllers
             _context.Add(employerRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-            //}
-            //ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", employerRequestNew.EducationId);
-            //ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", employerRequestNew.StatusId);
-            //ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", employerRequestNew.UserId);
-            //return View(employerRequestNew);
+
         }
 
         // GET: EmployerRequestNews/Edit/5
