@@ -1,7 +1,7 @@
 ﻿@model CourseWork2.Models.EmployerRequest
 @using Microsoft.AspNetCore.Identity
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Детально";
 }
 @inject UserManager<IdentityUser> UserManager
 @{
@@ -75,7 +75,7 @@
         <button style="background-color: green"><a asp-action="Publish" asp-route-id="@Model?.Id">Опубликовать</a></button>
         <button style="background-color: red"><a asp-action="Delete" asp-route-id="@Model.Id">Удалить</a></button>
     }
-    @* Если резюме принадлежат пользователю, то он может их изменять и удалять*@
+    @* Если вакансия принадлежат пользователю, то он может их изменять и удалять*@
     @if (Model.User.Id != currentUserId)
     {
         <a asp-action="Respond" asp-route-id="@Model.Id">Откликнуться</a>

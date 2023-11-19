@@ -75,29 +75,41 @@ namespace CourseWork2.Controllers
         public async Task<IActionResult> Index(int Id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            if (Id == 1)
+            if (User.IsInRole("MODERATOR"))
             {
-                //Для соискателя
-                //Фильтр по текущему пользователю "Мои резюме"
-                var applicationDbContextFiltered = _context.EmployerRequest
-                    .Include(e => e.Education)
-                    .Include(e => e.Status)
-                    .Include(e => e.User)
-                    .Where(e => e.UserId == identityUser.Id).ToList();
-                ViewData["filteredValues"] = Id;
-                return View(applicationDbContextFiltered);
-            }
-            else
-            {
-                //Для работодателя
-                //Выборка всех значений со статусом "Опубликовано"
                 var applicationDbContext = _context.EmployerRequest
                     .Include(e => e.Education)
                     .Include(e => e.Status)
                     .Include(e => e.User)
-                    .Where(e => e.StatusId == 2)
                     .ToList();
                 return View(applicationDbContext);
+            }
+            else
+            {
+                if (Id == 1)
+                {
+                    //Для соискателя
+                    //Фильтр по текущему пользователю "Мои резюме"
+                    var applicationDbContextFiltered = _context.EmployerRequest
+                        .Include(e => e.Education)
+                        .Include(e => e.Status)
+                        .Include(e => e.User)
+                        .Where(e => e.UserId == identityUser.Id).ToList();
+                    ViewData["filteredValues"] = Id;
+                    return View(applicationDbContextFiltered);
+                }
+                else
+                {
+                    //Для работодателя
+                    //Выборка всех значений со статусом "Опубликовано"
+                    var applicationDbContext = _context.EmployerRequest
+                        .Include(e => e.Education)
+                        .Include(e => e.Status)
+                        .Include(e => e.User)
+                        .Where(e => e.StatusId == 2)
+                        .ToList();
+                    return View(applicationDbContext);
+                }
             }
         }
 
