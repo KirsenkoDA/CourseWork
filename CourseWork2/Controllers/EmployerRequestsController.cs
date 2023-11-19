@@ -6,13 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CourseWork2.Data;
-using CourseWork2.Models;
-using Microsoft.AspNetCore.Identity;
 using EmploymentAgency.Models;
-using Microsoft.AspNetCore.Routing;
-using NuGet.ContentModel;
-using NUnit.Framework;
+using Microsoft.AspNetCore.Identity;
+using CourseWork2.Models;
+using NuGet.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using NUnit.Framework;
 
 namespace CourseWork2.Controllers
 {
@@ -27,7 +26,7 @@ namespace CourseWork2.Controllers
             _context = context;
             _userManager = userManager;
         }
-        //Отклик на вакансию
+        //Отклик на резюме
         [Authorize]
         public async Task<IActionResult> Respond(int? id)
         {
@@ -41,13 +40,13 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
 
-            var employerRequest = await _context.EmployerRequest.Include(a => a.Responds).FirstOrDefaultAsync(m => m.Id == id);
-            if (employerRequest == null)
+            var EmployerRequest = await _context.EmployerRequest.Include(a => a.Responds).FirstOrDefaultAsync(m => m.Id == id);
+            if (EmployerRequest == null)
             {
                 return NotFound();
             }
-            employerRequest.Responds.Add(account);
-            _context.Update(employerRequest);
+            EmployerRequest.Responds.Add(account);
+            _context.Update(EmployerRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -60,48 +59,49 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
 
-            var employerRequest = await _context.EmployerRequest.FindAsync(id);
-            if (employerRequest == null)
+            var EmployerRequest = await _context.EmployerRequest.FindAsync(id);
+            if (EmployerRequest == null)
             {
                 return NotFound();
             }
-            employerRequest.Status = _context.Statuses.Find(2);
-            _context.Update(employerRequest);
+            EmployerRequest.Status = _context.Statuses.Find(2);
+            _context.Update(EmployerRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-        // GET: EmployerRequestNews
+
+        // GET: EmployerRequest
         [Authorize]
-        public async Task<IActionResult> Index(int id)
+        public async Task<IActionResult> Index(int Id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            Account account = new Account();
-            account = await _context.Accounts
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(m => m.User == identityUser);
-            if (id == null || _context.EmployerRequest == null)
+            if (Id == 1)
             {
+                //Для соискателя
+                //Фильтр по текущему пользователю "Мои резюме"
                 var applicationDbContextFiltered = _context.EmployerRequest
-                .Include(e => e.Education)
-                .Include(e => e.Status)
-                .Include(e => e.User)
-                .Where(e => e.UserId == identityUser.Id)
-                .ToList();
+                    .Include(e => e.Education)
+                    .Include(e => e.Status)
+                    .Include(e => e.User)
+                    .Where(e => e.UserId == identityUser.Id).ToList();
+                ViewData["filteredValues"] = Id;
                 return View(applicationDbContextFiltered);
             }
             else
             {
+                //Для работодателя
+                //Выборка всех значений со статусом "Опубликовано"
                 var applicationDbContext = _context.EmployerRequest
-                .Include(e => e.Education)
-                .Include(e => e.Status)
-                .Include(e => e.User)
-                .Where(e => e.StatusId == 2)
-                .ToList();
+                    .Include(e => e.Education)
+                    .Include(e => e.Status)
+                    .Include(e => e.User)
+                    .Where(e => e.StatusId == 2)
+                    .ToList();
                 return View(applicationDbContext);
             }
         }
 
-        // GET: EmployerRequestNews/Details/5
+        // GET: EmployerRequest/Details/5
         [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
@@ -110,21 +110,19 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
 
-            var employerRequestNew = await _context.EmployerRequest
+            var EmployerRequest = await _context.EmployerRequest
                 .Include(e => e.Education)
                 .Include(e => e.Status)
                 .Include(e => e.User)
                 .Include(e => e.Responds).ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (employerRequestNew == null)
+            if (EmployerRequest == null)
             {
                 return NotFound();
             }
-
-            return View(employerRequestNew);
+            return View(EmployerRequest);
         }
-
-        // GET: EmployerRequestNews/Create
+        // GET: EmployerRequest/Create
         [Authorize]
         public IActionResult Create()
         {
@@ -134,33 +132,38 @@ namespace CourseWork2.Controllers
             return View();
         }
 
-        // POST: EmployerRequestNews/Create
+        // POST: EmployerRequest/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize]
-        public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest employerRequest)
+        public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest EmployerRequest)
         {
-
+            //if (ModelState.IsValid)
+            //{
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             //Account account = new Account();
             //account = await _context.Accounts
-            //    .Include(a => a.EmployerRequests)
+            //    .Include(a => a.EmployerRequest)
             //    .FirstOrDefaultAsync(m => m.User == identityUser);
-            employerRequest.DateCreated = DateTime.Now;
-            employerRequest.Status = _context.Statuses.Find(1);
-            employerRequest.User = identityUser;
-            employerRequest.Education = _context.Educations.Find(employerRequest.EducationId);
-            //account.EmployerRequests.Add(employerRequest);
+            EmployerRequest.DateCreated = DateTime.Now;
+            EmployerRequest.Status = _context.Statuses.Find(1);
+            EmployerRequest.User = _userManager.GetUserAsync(HttpContext.User).Result;
+            EmployerRequest.Education = _context.Educations.Find(EmployerRequest.EducationId);
+            //account.EmployerRequest.Add(EmployerRequest);
             //_context.Update(account);
-            _context.Add(employerRequest);
+            _context.Add(EmployerRequest);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-
+            return RedirectToAction("Index", new { id = 1 });
+            //}
+            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", EmployerRequest.EducationId);
+            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", EmployerRequest.StatusId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", EmployerRequest.UserId);
+            return View(EmployerRequest);
         }
 
-        // GET: EmployerRequestNews/Edit/5
+        // GET: EmployerRequest/Edit/5
         [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -169,53 +172,58 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
 
-            var employerRequestNew = await _context.EmployerRequest.FindAsync(id);
-            if (employerRequestNew == null)
+            var EmployerRequest = await _context.EmployerRequest.FindAsync(id);
+            if (EmployerRequest == null)
             {
                 return NotFound();
             }
-            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", employerRequestNew.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", employerRequestNew.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", employerRequestNew.UserId);
-            return View(employerRequestNew);
+            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", EmployerRequest.EducationId);
+            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", EmployerRequest.StatusId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", EmployerRequest.UserId);
+            return View(EmployerRequest);
         }
+
+        // POST: EmployerRequest/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest employerRequestNew)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest EmployerRequest)
         {
-            if (id != employerRequestNew.Id)
+            if (id != EmployerRequest.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    _context.Update(employerRequestNew);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!EmployerRequestNewExists(employerRequestNew.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                var existingEmployerRequest = await _context.EmployerRequest
+                    .Include(a => a.Responds)
+                    .FirstOrDefaultAsync(m => m.Id == EmployerRequest.Id);
+                existingEmployerRequest.Status = _context.Statuses.Find(1);
+                existingEmployerRequest.Post = EmployerRequest.Post;
+                existingEmployerRequest.Info = EmployerRequest.Info;
+                existingEmployerRequest.EducationId = EmployerRequest.EducationId;
+                existingEmployerRequest.Salary = EmployerRequest.Salary;
+                _context.Update(existingEmployerRequest);
+                await _context.SaveChangesAsync();
             }
-            ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Id", employerRequestNew.EducationId);
-            ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Id", employerRequestNew.StatusId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", employerRequestNew.UserId);
-            return View(employerRequestNew);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!EmployerRequestExists(EmployerRequest.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction("Index", new { id = 1 });
         }
 
-        // GET: EmployerRequestNews/Delete/5
+        // GET: EmployerRequest/Delete/5
         [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -224,42 +232,42 @@ namespace CourseWork2.Controllers
                 return NotFound();
             }
 
-            var employerRequestNew = await _context.EmployerRequest
-                .Include(e => e.Education)
-                .Include(e => e.Status)
-                .Include(e => e.User)
+            var EmployerRequest = await _context.EmployerRequest
+                .Include(r => r.Education)
+                .Include(r => r.Status)
+                .Include(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (employerRequestNew == null)
+            if (EmployerRequest == null)
             {
                 return NotFound();
             }
 
-            return View(employerRequestNew);
+            return View(EmployerRequest);
         }
 
-        // POST: EmployerRequestNews/Delete/5
+        // POST: EmployerRequest/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.EmployerRequest == null)
             {
-                return Problem("Entity set 'ApplicationDbContext.EmployerRequestNew'  is null.");
+                return Problem("Entity set 'ApplicationDbContext.EmployerRequest'  is null.");
             }
-            var employerRequestNew = await _context.EmployerRequest.FindAsync(id);
-            if (employerRequestNew != null)
+            var EmployerRequest = await _context.EmployerRequest.FindAsync(id);
+            if (EmployerRequest != null)
             {
-                _context.EmployerRequest.Remove(employerRequestNew);
+                _context.EmployerRequest.Remove(EmployerRequest);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool EmployerRequestNewExists(int id)
+        private bool EmployerRequestExists(int id)
         {
-          return (_context.EmployerRequest?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.EmployerRequest?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

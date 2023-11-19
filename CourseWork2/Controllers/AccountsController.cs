@@ -36,7 +36,7 @@ namespace CourseWork2.Controllers
             return View(await applicationDbContextFiltered.ToListAsync());
         }
         // GET: Accounts
-        [Authorize(Roles = "MODERATOR")]
+        [Authorize]
         public async Task<IActionResult> Index(int id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
@@ -79,7 +79,7 @@ namespace CourseWork2.Controllers
         }
 
         // GET: Accounts/Create
-        [Authorize(Roles = "MODERATOR")]
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -90,15 +90,15 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "MODERATOR")]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,Info")] Account account)
         {
-            if (ModelState.IsValid)
-            {
+            
+                account.User = _userManager.GetUserAsync(HttpContext.User).Result;
                 _context.Add(account);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
-            }
+           
             return View(account);
         }
 

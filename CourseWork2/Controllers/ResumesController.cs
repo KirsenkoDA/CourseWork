@@ -120,7 +120,6 @@ namespace CourseWork2.Controllers
             {
                 return NotFound();
             }
-
             return View(resume);
         }
         // GET: Resumes/Create
@@ -221,7 +220,7 @@ namespace CourseWork2.Controllers
                     throw;
                 }
             }
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", new { id = 1 });
         }
 
         // GET: Resumes/Delete/5
