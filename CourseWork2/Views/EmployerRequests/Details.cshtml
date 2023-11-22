@@ -65,7 +65,9 @@
     {
         @foreach (var responds in Model.Responds)
         {
-            <p>@responds.User.UserName</p>
+            var accountId = responds.User.Id;
+            <a asp-controller="Accounts" asp-action="AccountPreview" asp-route-id="@accountId">@responds.User.UserName</a>
+            <br />
         }
     }
 </div>
@@ -78,7 +80,11 @@
     @* Если вакансия принадлежат пользователю, то он может их изменять и удалять*@
     @if (Model.User.Id != currentUserId)
     {
-        <a asp-action="Respond" asp-route-id="@Model.Id">Откликнуться</a>
+        if (Model.Responds.FirstOrDefault(e => e.User.Id == currentUserId) == null)
+        {
+            @*Если пользователь откликнулся, то он уже откликатьс не может*@
+            <a class="text-white" asp-action="Respond" asp-route-id="@Model.Id"><button type="button" class="btn btn-success">Откликнуться</button></a>
+        }
     }
     @if (Model.User.Id == currentUserId)
     {

@@ -1,7 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-<a asp-controller="Accounts" asp-action="Create">Создать новый аккаунт</a>
+<div style="align-content:flex-end">
+    <button type="button" class="btn btn-dark"><a class="link-white" style="color: inherit; text-decoration:none;" asp-controller="Accounts" asp-action="Create">Создать новый аккаунт</a></button>
+</div>
 <div class="text-center d-flex justify-content-center align-items-center" style="height: 100vh;">
     
     <table align="center" width="100%">

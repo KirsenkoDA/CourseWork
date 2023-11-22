@@ -4,15 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using CourseWork2.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using CourseWork2.Models;
+using CourseWork2.Data;
 
 namespace CourseWork2.Controllers
 {
     public class UsersController : Controller
     {
         UserManager<IdentityUser> _userManager;
-        public UsersController(UserManager<IdentityUser> userManager)
+        private readonly ApplicationDbContext _context;
+        public UsersController(UserManager<IdentityUser> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
         [Authorize(Roles = "ADMINISTRATOR")]
         public IActionResult Index() => View(_userManager.Users.ToList());
@@ -83,6 +87,13 @@ namespace CourseWork2.Controllers
         [HttpPost]
         public async Task<ActionResult> Delete(string id)
         {
+            Account account = new Account();
+            account = _context.Accounts.FirstOrDefault(x => x.User.Id == id);
+            if(account != null)
+            {
+                _context.Accounts.Remove(account);
+                await _context.SaveChangesAsync();
+            }
             IdentityUser user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {

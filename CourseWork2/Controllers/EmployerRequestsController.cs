@@ -81,6 +81,8 @@ namespace CourseWork2.Controllers
                     .Include(e => e.Education)
                     .Include(e => e.Status)
                     .Include(e => e.User)
+                    .Include(e => e.Responds)
+                        .ThenInclude(r => r.User)
                     .ToList();
                 return View(applicationDbContext);
             }
@@ -94,6 +96,8 @@ namespace CourseWork2.Controllers
                         .Include(e => e.Education)
                         .Include(e => e.Status)
                         .Include(e => e.User)
+                        .Include(e => e.Responds)
+                            .ThenInclude(r => r.User)
                         .Where(e => e.UserId == identityUser.Id).ToList();
                     ViewData["filteredValues"] = Id;
                     return View(applicationDbContextFiltered);
@@ -106,6 +110,8 @@ namespace CourseWork2.Controllers
                         .Include(e => e.Education)
                         .Include(e => e.Status)
                         .Include(e => e.User)
+                        .Include(e => e.Responds)
+                            .ThenInclude(r => r.User)
                         .Where(e => e.StatusId == 2)
                         .ToList();
                     return View(applicationDbContext);

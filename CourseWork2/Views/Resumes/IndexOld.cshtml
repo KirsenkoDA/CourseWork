@@ -24,22 +24,50 @@
     </p>
 }
 <table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.User)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateCreated)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Post)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Info)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Education)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Salary)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
         @foreach (var item in Model)
         {
         <tr>
             <td>
-                    <h3>@Html.DisplayFor(modelItem => item.Post)</h3>
-                <br>
-                    @Html.DisplayFor(modelItem => item.User.UserName)
-                <br>
-                    <b>Зарплата: @Html.DisplayFor(modelItem => item.Salary)</b>
+                @Html.DisplayFor(modelItem => item.User.UserName)
             </td>
             <td>
-                @*@{
-                    var info = item.Info.Substring(0, 30);
-                }
-                @info*@
-                        @Html.DisplayFor(modelItem => item.Info)
+                @Html.DisplayFor(modelItem => item.DateCreated)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Post)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Info)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Education.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Salary)
             </td>
             <td>
                     @{
@@ -73,7 +101,7 @@
                         //Если резюме принадлежит пользователю, то он не может откликаться
                         else
                         {   @*Если пользователь откликнулся, то он уже откликатьс не может*@
-                            if (item.Responds.FirstOrDefault(e => e.User.Id == currentUserId) == null)
+                            if (item.Responds.FirstOrDefault(e => e.User.Id == currentUserId) != null)
                             {
                                 <a class="text-white" asp-action="Respond" asp-route-id="@item.Id"><button type="button" class="btn btn-success">Откликнуться</button></a>
                             }
@@ -83,4 +111,5 @@
             </td>
         </tr>
 }
+    </tbody>
 </table>

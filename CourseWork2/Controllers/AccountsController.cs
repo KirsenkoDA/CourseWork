@@ -23,8 +23,8 @@ namespace CourseWork2.Controllers
             _context = context;
             _userManager = userManager;
         }
-        //Аккаунт который видит владелец резме или вакансии
-        [Authorize]
+    //Аккаунт который видит владелец резме или вакансии
+    [Authorize]
         public async Task<IActionResult> AccountPreview(string id)
         {
  
@@ -51,11 +51,23 @@ namespace CourseWork2.Controllers
             }
             else
             {
-                var applicationDbContextFiltered = _context.Accounts
-                .Include(e => e.EmployerRequests)
-                .Include(e => e.Resumes)
-                .Include(e => e.User);
-                return View(await applicationDbContextFiltered.ToListAsync());
+                if (User.IsInRole("MODERATOR"))
+                {
+                    var applicationDbContextFiltered = _context.Accounts
+                    .Include(e => e.EmployerRequests)
+                    .Include(e => e.Resumes)
+                    .Include(e => e.User);
+                    return View(await applicationDbContextFiltered.ToListAsync());
+                }
+                else
+                {
+                    var applicationDbContextFiltered = _context.Accounts
+                    .Include(e => e.EmployerRequests)
+                    .Include(e => e.Resumes)
+                    .Include(e => e.User)
+                    .Where(e => e.User.Id == identityUser.Id);
+                    return View(await applicationDbContextFiltered.ToListAsync());
+                }
             }
         }
 
@@ -82,7 +94,18 @@ namespace CourseWork2.Controllers
         [Authorize]
         public IActionResult Create()
         {
-            return View();
+            IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            var account = _context.Accounts
+                .Include(e => e.User)
+                .FirstOrDefault(e => e.User.Id == identityUser.Id);
+            if(account == null)
+            {
+                return View();
+            }
+            else
+            {
+                return RedirectToAction("Index", new { id = 1 });
+            }
         }
 
         // POST: Accounts/Create
