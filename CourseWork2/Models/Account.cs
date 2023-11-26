@@ -10,6 +10,8 @@ namespace CourseWork2.Models
         public int Id { get; set; }
         public IdentityUser User { get; set; }
         public string Info { get; set; }
+        public string PhoneNumber { get; set; }  
+        public string Name { get; set; }
         public ICollection<Resume> Resumes { get; set; }
         public ICollection<EmployerRequest> EmployerRequests { get; set; }
 

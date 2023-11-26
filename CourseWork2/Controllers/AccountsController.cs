@@ -9,6 +9,7 @@ using CourseWork2.Data;
 using CourseWork2.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Principal;
 
 namespace CourseWork2.Controllers
 {
@@ -18,13 +19,16 @@ namespace CourseWork2.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public AccountsController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public AccountsController(ApplicationDbContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
-    //Аккаунт который видит владелец резме или вакансии
-    [Authorize]
+        //Аккаунт который видит владелец резме или вакансии
+        [Authorize]
         public async Task<IActionResult> AccountPreview(string id)
         {
  
@@ -114,17 +118,23 @@ namespace CourseWork2.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Create([Bind("Id,Info")] Account account)
+        public async Task<IActionResult> Create([Bind("Id,Info,Name,PhoneNumber")] Account account)
         {
-            
-                account.User = _userManager.GetUserAsync(HttpContext.User).Result;
-                _context.Add(account);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-           
-            return View(account);
-        }
+            account.User = _userManager.GetUserAsync(HttpContext.User).Result;
+            _context.Add(account);
+            await _context.SaveChangesAsync();
 
+            IdentityUser currentUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            await _userManager.AddToRoleAsync(currentUser, "CLIENT");
+            AlterUserAsync(account.Name, currentUser);
+            return RedirectToAction(nameof(Index));
+        }
+        public async Task AlterUserAsync(string name, IdentityUser currentUser)
+        {
+            currentUser.UserName = name;
+            _context.Update(currentUser);
+            await _context.SaveChangesAsync();
+        }
         // GET: Accounts/Edit/5
         [Authorize(Roles = "MODERATOR")]
         public async Task<IActionResult> Edit(int? id)

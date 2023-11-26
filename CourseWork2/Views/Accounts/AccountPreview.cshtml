@@ -22,19 +22,18 @@
                 <td>
                     <h2>Имя</h2>
                     @Html.DisplayFor(modelItem => item.User.UserName)
+                    
+                    <h2>E-mail</h2>
+                    @Html.DisplayFor(modelItem => item.User.Email)
+
+                    <h2>Номер телефона</h2>
+                    @Html.DisplayFor(modelItem => item.PhoneNumber)
                 </td>
                 <td>
                     <h2>Информация</h2>
                     @Html.DisplayFor(modelItem => item.Info)
+                
                 </td>
-                <td>
-                    <h2>E-mail</h2>
-                    @Html.DisplayFor(modelItem => item.User.Email)
-                </td>
-                @*<td>
-                    <h2>Номер телефона</h2>
-                    @Html.DisplayFor(modelItem => item.User.PhoneNumber)
-                </td>*@
             </tr>
         }
     </tbody>
