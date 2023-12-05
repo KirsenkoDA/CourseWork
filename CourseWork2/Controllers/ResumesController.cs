@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Core;
 using Microsoft.EntityFrameworkCore;
 using CourseWork2.Data;
 using EmploymentAgency.Models;
@@ -13,6 +14,7 @@ using NuGet.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using NUnit.Framework;
 using NLog;
+using X.PagedList;
 
 namespace CourseWork2.Controllers
 {
@@ -76,12 +78,13 @@ namespace CourseWork2.Controllers
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         // GET: Resumes
         [Authorize]
-        public async Task<IActionResult> Index(int Id)
+        public async Task<IActionResult> Index(int Id, int? pageNumber)
         {
-            logger.Info("Вызов метода MyMethod");
+            const int pageSize = 3;
+
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             Account userAccount = _context.Accounts.FirstOrDefault(u => u.User.Id == identityUser.Id);
-            if(User.IsInRole("MODERATOR"))
+            if (User.IsInRole("MODERATOR"))
             {
                 var applicationDbContext = _context.Resumes
                     .Include(e => e.Education)
@@ -90,7 +93,12 @@ namespace CourseWork2.Controllers
                     .Include(e => e.Responds)
                         .ThenInclude(u => u.User)
                     .ToList();
-                return View(applicationDbContext);
+
+                int pageCount = (int)Math.Ceiling(_context.Resumes.Count() / (float)pageSize);
+
+                ViewData["pageCount"] = pageCount;
+                ViewData["currentPage"] = pageNumber;
+                return View(await applicationDbContext.ToPagedListAsync(pageNumber ?? 1, pageSize));
             }
             else
             {
@@ -105,8 +113,13 @@ namespace CourseWork2.Controllers
                         .Include(e => e.Responds)
                             .ThenInclude(u => u.User)
                         .Where(e => e.UserId == identityUser.Id).ToList();
+
+                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.UserId == identityUser.Id).Count() / (float)pageSize);
+
                     ViewData["filteredValues"] = Id;
-                    return View(applicationDbContextFiltered);
+                    ViewData["pageCount"] = pageCount;
+                    ViewData["currentPage"] = pageNumber;
+                    return View(await applicationDbContextFiltered.ToPagedListAsync(pageNumber ?? 1, pageSize));
                 }
                 else
                 {
@@ -120,12 +133,17 @@ namespace CourseWork2.Controllers
                             .ThenInclude(u => u.User)
                         .Where(e => e.StatusId == 2)
                         .ToList();
+
+                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.StatusId == 2).Count() / (float)pageSize);
+
                     if (userAccount == null)
                     {
                         _logger.LogInformation("Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись");
                         ViewBag.Message = "Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись";
                     }
-                    return View(applicationDbContext);
+                    ViewData["pageCount"] = pageCount;
+                    ViewData["currentPage"] = pageNumber;
+                    return View(await applicationDbContext.ToPagedListAsync(pageNumber ?? 1, pageSize));
                 }
             }
         }

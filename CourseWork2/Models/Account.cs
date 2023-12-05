@@ -14,6 +14,5 @@ namespace CourseWork2.Models
         public string Name { get; set; }
         public ICollection<Resume> Resumes { get; set; }
         public ICollection<EmployerRequest> EmployerRequests { get; set; }
-
     }
 }

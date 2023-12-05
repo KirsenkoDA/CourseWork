@@ -1,14 +1,9 @@
 ﻿@model IEnumerable<CourseWork2.Models.Account>
 @using Microsoft.AspNetCore.Identity
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Мой аккаунт";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
@@ -45,28 +40,26 @@
                 }
                 @if (item.User.Id == currentUserId)
                 {*@
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Изменить</a>
+                    <a asp-action="Details" asp-route-id="@item.Id">Детали</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Удалить</a>
                @* }*@
             </td>
         </tr>
         <tr>
             <td>
-                <h2>Созданные Резюме</h2>
+                <h2>Избранные Резюме</h2>
                 @foreach (var resume in item.Resumes)
                 {
                     <p>@resume.Post</p>
                 }
-                @Html.DisplayFor(modelItem => item.Resumes)
             </td>
             <td>
-                <h2>Созданные вакансии</h2>
+                    <h2>Избранные вакансии</h2>
                 @foreach (var employerRequest in item.EmployerRequests)
                 {
                     <p>@employerRequest.Post</p>
                 }
-                @Html.DisplayFor(modelItem => item.Resumes)
             </td>
         </tr>
 }

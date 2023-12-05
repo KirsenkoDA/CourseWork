@@ -5,6 +5,8 @@
 }
 @{
     int filteredValue;
+    int pageCount = (int)ViewData["pageCount"];
+    int? currentPage = (int?)ViewData["currentPage"];
 }
     @if (ViewData["filteredValues"] == null)
     {
@@ -83,3 +85,57 @@
         </tr>
 }
 </table>
+@{
+    int i = 0;
+    int k = 1;
+}
+@if (ViewData["filteredValues"] == null)
+{
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            @if(currentPage != 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="/Resumes/Index?pageNumber=@k-1" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            }
+            @for (i = 0; i < pageCount; i++)
+            {
+                <li class="page-item"><a class="page-link" href="/Resumes/Index?pageNumber=@k">@k</a></li>
+                k++;
+            }
+            @if(currentPage != pageCount)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="/Resumes/Index?pageNumber=@k+1" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+else
+{
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <li class="page-item">
+                <a class="page-link" href="/Resumes/Index?pageNumber=@k-1" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (i = 0; i < pageCount; i++)
+            {
+                <li class="page-item"><a class="page-link" href="/Resumes/Index/1?pageNumber=@k">@k</a></li>
+                k++;
+            }
+            <li class="page-item">
+                <a class="page-link" href="/Resumes/Index?pageNumber=@k+1" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
