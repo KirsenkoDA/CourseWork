@@ -21,11 +21,14 @@ namespace CourseWork2.Controllers
 
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AccountsController(ApplicationDbContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        private readonly SignInManager<IdentityUser> _signInManager;
+
+        public AccountsController(ApplicationDbContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, SignInManager<IdentityUser> signInManager)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
+            _signInManager = signInManager;
         }
         //Аккаунт который видит владелец резме или вакансии
         [Authorize]
@@ -127,7 +130,8 @@ namespace CourseWork2.Controllers
             IdentityUser currentUser = _userManager.GetUserAsync(HttpContext.User).Result;
             await _userManager.AddToRoleAsync(currentUser, "CLIENT");
             AlterUserAsync(account.Name, currentUser);
-            return RedirectToAction(nameof(Index));
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
         }
         public async Task AlterUserAsync(string name, IdentityUser currentUser)
         {

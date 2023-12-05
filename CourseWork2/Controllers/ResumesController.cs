@@ -12,6 +12,7 @@ using CourseWork2.Models;
 using NuGet.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using NUnit.Framework;
+using NLog;
 
 namespace CourseWork2.Controllers
 {
@@ -21,10 +22,13 @@ namespace CourseWork2.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public ResumesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        private readonly ILogger<ResumesController> _logger;
+
+        public ResumesController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ResumesController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
         //Отклик на резюме
         [Authorize]
@@ -69,12 +73,14 @@ namespace CourseWork2.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         // GET: Resumes
         [Authorize]
         public async Task<IActionResult> Index(int Id)
         {
+            logger.Info("Вызов метода MyMethod");
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            Account userAccount = _context.Accounts.FirstOrDefault(u => u.User.Id == identityUser.Id);
             if(User.IsInRole("MODERATOR"))
             {
                 var applicationDbContext = _context.Resumes
@@ -114,6 +120,11 @@ namespace CourseWork2.Controllers
                             .ThenInclude(u => u.User)
                         .Where(e => e.StatusId == 2)
                         .ToList();
+                    if (userAccount == null)
+                    {
+                        _logger.LogInformation("Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись");
+                        ViewBag.Message = "Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись";
+                    }
                     return View(applicationDbContext);
                 }
             }

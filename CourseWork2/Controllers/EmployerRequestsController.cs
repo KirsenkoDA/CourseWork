@@ -21,10 +21,13 @@ namespace CourseWork2.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public EmployerRequestsController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        private readonly ILogger<EmployerRequestsController> _logger;
+
+        public EmployerRequestsController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<EmployerRequestsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
         //Отклик на резюме
         [Authorize]
@@ -75,6 +78,7 @@ namespace CourseWork2.Controllers
         public async Task<IActionResult> Index(int Id)
         {
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            Account userAccount = _context.Accounts.FirstOrDefault(u => u.User.Id == identityUser.Id);
             if (User.IsInRole("MODERATOR"))
             {
                 var applicationDbContext = _context.EmployerRequest
@@ -114,6 +118,11 @@ namespace CourseWork2.Controllers
                             .ThenInclude(r => r.User)
                         .Where(e => e.StatusId == 2)
                         .ToList();
+                    if (userAccount == null)
+                    {
+                        _logger.LogInformation("Для того чтобы откликнуться на вакансию, создайте аккаунт и перезайтие в свою учётную запись");
+                        ViewBag.Message = "Для того чтобы откликнуться на вакансию, создайте аккаунт и перезайтие в свою учётную запись";
+                    }
                     return View(applicationDbContext);
                 }
             }
