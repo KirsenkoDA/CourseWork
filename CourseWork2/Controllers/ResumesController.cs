@@ -78,27 +78,29 @@ namespace CourseWork2.Controllers
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         // GET: Resumes
         [Authorize]
-        public async Task<IActionResult> Index(int Id, int? pageNumber)
+        public async Task<IActionResult> Index(int Id, int? pageNumber, string? searchText)
         {
             const int pageSize = 3;
+            int pageCount;
 
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             Account userAccount = _context.Accounts.FirstOrDefault(u => u.User.Id == identityUser.Id);
+            Task<IPagedList<Resume>> applicationDbContext;
+
             if (User.IsInRole("MODERATOR"))
             {
-                var applicationDbContext = _context.Resumes
+                applicationDbContext = _context.Resumes
                     .Include(e => e.Education)
                     .Include(e => e.Status)
                     .Include(e => e.User)
                     .Include(e => e.Responds)
                         .ThenInclude(u => u.User)
-                    .ToList();
+                    .ToPagedListAsync(pageNumber ?? 1, pageSize);
 
-                int pageCount = (int)Math.Ceiling(_context.Resumes.Count() / (float)pageSize);
+                pageCount = (int)Math.Ceiling(_context.Resumes.Count() / (float)pageSize);
 
                 ViewData["pageCount"] = pageCount;
-                ViewData["currentPage"] = pageNumber;
-                return View(await applicationDbContext.ToPagedListAsync(pageNumber ?? 1, pageSize));
+                return View(await applicationDbContext);
             }
             else
             {
@@ -106,44 +108,75 @@ namespace CourseWork2.Controllers
                 {
                     //Для соискателя
                     //Фильтр по текущему пользователю "Мои резюме"
-                    var applicationDbContextFiltered = _context.Resumes
+                    if (searchText != null)
+                    {
+                        //Фильтр поиска по части названия
+                        applicationDbContext = _context.Resumes
                         .Include(e => e.Education)
                         .Include(e => e.Status)
                         .Include(e => e.User)
                         .Include(e => e.Responds)
                             .ThenInclude(u => u.User)
-                        .Where(e => e.UserId == identityUser.Id).ToList();
-
-                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.UserId == identityUser.Id).Count() / (float)pageSize);
-
+                        .Where(e => (e.UserId == identityUser.Id) && (e.Post.Contains(searchText)))
+                        .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.UserId == identityUser.Id && (e.Post.Contains(searchText))).Count() / (float)pageSize);
+                    }
+                    else
+                    {
+                        //Без фильтра поиска по части названия
+                        applicationDbContext = _context.Resumes
+                            .Include(e => e.Education)
+                            .Include(e => e.Status)
+                            .Include(e => e.User)
+                            .Include(e => e.Responds)
+                                .ThenInclude(u => u.User)
+                            .Where(e => e.UserId == identityUser.Id)
+                            .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.UserId == identityUser.Id).Count() / (float)pageSize);
+                    }
                     ViewData["filteredValues"] = Id;
                     ViewData["pageCount"] = pageCount;
-                    ViewData["currentPage"] = pageNumber;
-                    return View(await applicationDbContextFiltered.ToPagedListAsync(pageNumber ?? 1, pageSize));
+                    return View(await applicationDbContext);
                 }
                 else
                 {
                     //Для работодателя
                     //Выборка всех значений со статусом "Опубликовано"
-                    var applicationDbContext = _context.Resumes
+                    if (searchText != null)
+                    {
+                        //Фильтр поиска по части названия
+                        applicationDbContext = _context.Resumes
                         .Include(e => e.Education)
                         .Include(e => e.Status)
                         .Include(e => e.User)
                         .Include(e => e.Responds)
                             .ThenInclude(u => u.User)
-                        .Where(e => e.StatusId == 2)
-                        .ToList();
-
-                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.StatusId == 2).Count() / (float)pageSize);
+                        .Where(e => (e.StatusId == 2) && (e.Post.Contains(searchText)))
+                        .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.StatusId == 2 && (e.Post.Contains(searchText))).Count() / (float)pageSize);
+                    }
+                    else
+                    {
+                        //Без фильтра поиска по части названия
+                        applicationDbContext = _context.Resumes
+                            .Include(e => e.Education)
+                            .Include(e => e.Status)
+                            .Include(e => e.User)
+                            .Include(e => e.Responds)
+                                .ThenInclude(u => u.User)
+                            .Where(e => e.StatusId == 2)
+                            .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.StatusId == 2).Count() / (float)pageSize);
+                    }
 
                     if (userAccount == null)
                     {
                         _logger.LogInformation("Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись");
                         ViewBag.Message = "Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись";
                     }
+                    ViewData["searchText"] = searchText;
                     ViewData["pageCount"] = pageCount;
-                    ViewData["currentPage"] = pageNumber;
-                    return View(await applicationDbContext.ToPagedListAsync(pageNumber ?? 1, pageSize));
+                    return View(await applicationDbContext);
                 }
             }
         }

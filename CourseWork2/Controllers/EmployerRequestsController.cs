@@ -12,6 +12,8 @@ using CourseWork2.Models;
 using NuGet.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using NUnit.Framework;
+using System.Drawing.Printing;
+using X.PagedList;
 
 namespace CourseWork2.Controllers
 {
@@ -75,10 +77,12 @@ namespace CourseWork2.Controllers
 
         // GET: EmployerRequest
         [Authorize]
-        public async Task<IActionResult> Index(int Id)
+        public async Task<IActionResult> Index(int Id, int? pageNumber)
         {
+            const int pageSize = 3;
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             Account userAccount = _context.Accounts.FirstOrDefault(u => u.User.Id == identityUser.Id);
+
             if (User.IsInRole("MODERATOR"))
             {
                 var applicationDbContext = _context.EmployerRequest
@@ -87,8 +91,10 @@ namespace CourseWork2.Controllers
                     .Include(e => e.User)
                     .Include(e => e.Responds)
                         .ThenInclude(r => r.User)
-                    .ToList();
-                return View(applicationDbContext);
+                    .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                int pageCount = (int)Math.Ceiling(_context.EmployerRequest.Count() / (float)pageSize);
+                ViewData["pageCount"] = pageCount;
+                return View(await applicationDbContext);
             }
             else
             {
@@ -102,9 +108,11 @@ namespace CourseWork2.Controllers
                         .Include(e => e.User)
                         .Include(e => e.Responds)
                             .ThenInclude(r => r.User)
-                        .Where(e => e.UserId == identityUser.Id).ToList();
+                        .Where(e => e.UserId == identityUser.Id).ToPagedListAsync(pageNumber ?? 1, pageSize);
+                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.UserId == identityUser.Id).Count() / (float)pageSize);
                     ViewData["filteredValues"] = Id;
-                    return View(applicationDbContextFiltered);
+                    ViewData["pageCount"] = pageCount;
+                    return View(await applicationDbContextFiltered);
                 }
                 else
                 {
@@ -117,13 +125,15 @@ namespace CourseWork2.Controllers
                         .Include(e => e.Responds)
                             .ThenInclude(r => r.User)
                         .Where(e => e.StatusId == 2)
-                        .ToList();
+                        .ToPagedListAsync(pageNumber ?? 1, pageSize);
                     if (userAccount == null)
                     {
                         _logger.LogInformation("Для того чтобы откликнуться на вакансию, создайте аккаунт и перезайтие в свою учётную запись");
                         ViewBag.Message = "Для того чтобы откликнуться на вакансию, создайте аккаунт и перезайтие в свою учётную запись";
                     }
-                    return View(applicationDbContext);
+                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.StatusId == 2).Count() / (float)pageSize);
+                    ViewData["pageCount"] = pageCount;
+                    return View(await applicationDbContext);
                 }
             }
         }

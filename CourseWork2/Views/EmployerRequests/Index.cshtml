@@ -5,6 +5,8 @@
 }
 @{
     int filteredValue;
+    int pageCount = (int)ViewData["pageCount"];
+    int? currentPage = (int?)ViewData["currentPage"];
 }
     @if (ViewData["filteredValues"] == null)
     {
@@ -85,3 +87,31 @@
         </tr>
 }
 </table>
+@{
+    int i = 0;
+    int k = 1;
+}
+@if (ViewData["filteredValues"] == null)
+{
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            @for (i = 0; i < pageCount; i++)
+            {
+                <li class="page-item"><a class="page-link" href="/EmployerRequests/Index?pageNumber=@k">@k</a></li>
+                k++;
+            }
+        </ul>
+    </nav>
+}
+else
+{
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            @for (i = 0; i < pageCount; i++)
+            {
+                <li class="page-item"><a class="page-link" href="/EmployerRequests/Index/1?pageNumber=@k">@k</a></li>
+                k++;
+            }
+        </ul>
+    </nav>
+}

@@ -7,6 +7,7 @@
     int filteredValue;
     int pageCount = (int)ViewData["pageCount"];
     int? currentPage = (int?)ViewData["currentPage"];
+    string? searchText = (string?)ViewData["searchText"];
 }
     @if (ViewData["filteredValues"] == null)
     {
@@ -24,6 +25,13 @@
         <button type="button" class="btn btn-success"><a class="text-white" asp-action="Create">Создать резюме</a></button>
     </p>
 }
+<button><a href="/Resumes/Index/@filteredValue?pageNumber=1">К списку резюме</a></button>
+@*Фильтр*@
+<form method="get" asp-action="Index">
+    <input type="hidden" value="@filteredValue" name="Id" />
+    <input type="text" name="searchText" />
+    <input type="submit" value="Найти" />
+</form>
 <table class="table table-striped table-hover">
         @foreach (var item in Model)
         {
@@ -85,6 +93,7 @@
         </tr>
 }
 </table>
+@*Пагинация, номера страниц*@
 @{
     int i = 0;
     int k = 1;
@@ -93,26 +102,10 @@
 {
     <nav aria-label="Page navigation example">
         <ul class="pagination">
-            @if(currentPage != 1)
-            {
-                <li class="page-item">
-                    <a class="page-link" href="/Resumes/Index?pageNumber=@k-1" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-            }
             @for (i = 0; i < pageCount; i++)
             {
-                <li class="page-item"><a class="page-link" href="/Resumes/Index?pageNumber=@k">@k</a></li>
+                <li class="page-item"><a class="page-link" href="/Resumes/Index?pageNumber=@k&searchText=@searchText">@k</a></li>
                 k++;
-            }
-            @if(currentPage != pageCount)
-            {
-                <li class="page-item">
-                    <a class="page-link" href="/Resumes/Index?pageNumber=@k+1" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
             }
         </ul>
     </nav>
@@ -121,21 +114,11 @@ else
 {
     <nav aria-label="Page navigation example">
         <ul class="pagination">
-            <li class="page-item">
-                <a class="page-link" href="/Resumes/Index?pageNumber=@k-1" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
             @for (i = 0; i < pageCount; i++)
             {
-                <li class="page-item"><a class="page-link" href="/Resumes/Index/1?pageNumber=@k">@k</a></li>
+                <li class="page-item"><a class="page-link" href="/Resumes/Index/1?pageNumber=@k&searchText=@searchText">@k</a></li>
                 k++;
             }
-            <li class="page-item">
-                <a class="page-link" href="/Resumes/Index?pageNumber=@k+1" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
         </ul>
     </nav>
 }
