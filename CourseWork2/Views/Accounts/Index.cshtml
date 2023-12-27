@@ -51,14 +51,18 @@
                 <h2>Избранные Резюме</h2>
                 @foreach (var resume in item.Resumes)
                 {
-                    <p>@resume.Post</p>
+                    <p>
+                        <a asp-controller="Resumes" asp-action="Details" asp-route-id="@resume.Id">@resume.Post</a>
+                    </p>
                 }
             </td>
             <td>
-                    <h2>Избранные вакансии</h2>
+                <h2>Избранные вакансии</h2>
                 @foreach (var employerRequest in item.EmployerRequests)
                 {
-                    <p>@employerRequest.Post</p>
+                    <p>
+                        <a asp-controller="EmployerRequests" asp-action="Details" asp-route-id="@employerRequest.Id">@employerRequest.Post</a>
+                    </p>
                 }
             </td>
         </tr>

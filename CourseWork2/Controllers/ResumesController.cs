@@ -221,23 +221,14 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] Resume resume)
         {
-            //if (ModelState.IsValid)
-            //{
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            //Account account = new Account();
-            //account = await _context.Accounts
-            //    .Include(a => a.Resumes)
-            //    .FirstOrDefaultAsync(m => m.User == identityUser);
             resume.DateCreated = DateTime.Now;
             resume.Status = _context.Statuses.Find(1);
             resume.User = _userManager.GetUserAsync(HttpContext.User).Result;
             resume.Education = _context.Educations.Find(resume.EducationId);
-            //account.Resumes.Add(resume);
-            //_context.Update(account);
             _context.Add(resume);
             await _context.SaveChangesAsync();
             return RedirectToAction("Index", new { id = 1 });
-            //}
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", resume.EducationId);
             ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", resume.StatusId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", resume.UserId);

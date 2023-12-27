@@ -16,7 +16,6 @@ namespace CourseWork2.Data
         public DbSet<Education> Educations { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Service> Services { get; set; }
-        public DbSet<CourseWork2.Models.Contract>? Contract { get; set; }
         public DbSet<CourseWork2.Models.EmployerRequest>? EmployerRequest { get; set; }
     }
 }

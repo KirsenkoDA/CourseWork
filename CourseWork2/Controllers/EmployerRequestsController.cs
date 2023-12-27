@@ -77,22 +77,27 @@ namespace CourseWork2.Controllers
 
         // GET: EmployerRequest
         [Authorize]
-        public async Task<IActionResult> Index(int Id, int? pageNumber)
+        public async Task<IActionResult> Index(int Id, int? pageNumber, string? searchText)
         {
             const int pageSize = 3;
+            int pageCount;
+
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
             Account userAccount = _context.Accounts.FirstOrDefault(u => u.User.Id == identityUser.Id);
+            Task<IPagedList<EmployerRequest>> applicationDbContext;
 
             if (User.IsInRole("MODERATOR"))
             {
-                var applicationDbContext = _context.EmployerRequest
+                applicationDbContext = _context.EmployerRequest
                     .Include(e => e.Education)
                     .Include(e => e.Status)
                     .Include(e => e.User)
                     .Include(e => e.Responds)
-                        .ThenInclude(r => r.User)
+                        .ThenInclude(u => u.User)
                     .ToPagedListAsync(pageNumber ?? 1, pageSize);
-                int pageCount = (int)Math.Ceiling(_context.EmployerRequest.Count() / (float)pageSize);
+
+                pageCount = (int)Math.Ceiling(_context.EmployerRequest.Count() / (float)pageSize);
+
                 ViewData["pageCount"] = pageCount;
                 return View(await applicationDbContext);
             }
@@ -102,36 +107,73 @@ namespace CourseWork2.Controllers
                 {
                     //Для соискателя
                     //Фильтр по текущему пользователю "Мои резюме"
-                    var applicationDbContextFiltered = _context.EmployerRequest
+                    if (searchText != null)
+                    {
+                        //Фильтр поиска по части названия
+                        applicationDbContext = _context.EmployerRequest
                         .Include(e => e.Education)
                         .Include(e => e.Status)
                         .Include(e => e.User)
                         .Include(e => e.Responds)
-                            .ThenInclude(r => r.User)
-                        .Where(e => e.UserId == identityUser.Id).ToPagedListAsync(pageNumber ?? 1, pageSize);
-                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.UserId == identityUser.Id).Count() / (float)pageSize);
+                            .ThenInclude(u => u.User)
+                        .Where(e => (e.UserId == identityUser.Id) && (e.Post.Contains(searchText)))
+                        .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.EmployerRequest.Where(e => e.UserId == identityUser.Id && (e.Post.Contains(searchText))).Count() / (float)pageSize);
+                    }
+                    else
+                    {
+                        //Без фильтра поиска по части названия
+                        applicationDbContext = _context.EmployerRequest
+                            .Include(e => e.Education)
+                            .Include(e => e.Status)
+                            .Include(e => e.User)
+                            .Include(e => e.Responds)
+                                .ThenInclude(u => u.User)
+                            .Where(e => e.UserId == identityUser.Id)
+                            .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.EmployerRequest.Where(e => e.UserId == identityUser.Id).Count() / (float)pageSize);
+                    }
                     ViewData["filteredValues"] = Id;
                     ViewData["pageCount"] = pageCount;
-                    return View(await applicationDbContextFiltered);
+                    return View(await applicationDbContext);
                 }
                 else
                 {
                     //Для работодателя
                     //Выборка всех значений со статусом "Опубликовано"
-                    var applicationDbContext = _context.EmployerRequest
+                    if (searchText != null)
+                    {
+                        //Фильтр поиска по части названия
+                        applicationDbContext = _context.EmployerRequest
                         .Include(e => e.Education)
                         .Include(e => e.Status)
                         .Include(e => e.User)
                         .Include(e => e.Responds)
-                            .ThenInclude(r => r.User)
-                        .Where(e => e.StatusId == 2)
+                            .ThenInclude(u => u.User)
+                        .Where(e => (e.StatusId == 2) && (e.Post.Contains(searchText)))
                         .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.EmployerRequest.Where(e => e.StatusId == 2 && (e.Post.Contains(searchText))).Count() / (float)pageSize);
+                    }
+                    else
+                    {
+                        //Без фильтра поиска по части названия
+                        applicationDbContext = _context.EmployerRequest
+                            .Include(e => e.Education)
+                            .Include(e => e.Status)
+                            .Include(e => e.User)
+                            .Include(e => e.Responds)
+                                .ThenInclude(u => u.User)
+                            .Where(e => e.StatusId == 2)
+                            .ToPagedListAsync(pageNumber ?? 1, pageSize);
+                        pageCount = (int)Math.Ceiling(_context.EmployerRequest.Where(e => e.StatusId == 2).Count() / (float)pageSize);
+                    }
+
                     if (userAccount == null)
                     {
-                        _logger.LogInformation("Для того чтобы откликнуться на вакансию, создайте аккаунт и перезайтие в свою учётную запись");
-                        ViewBag.Message = "Для того чтобы откликнуться на вакансию, создайте аккаунт и перезайтие в свою учётную запись";
+                        _logger.LogInformation("Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись");
+                        ViewBag.Message = "Для того чтобы откликнуться на резюме, создайте аккаунт и перезайтие в свою учётную запись";
                     }
-                    int pageCount = (int)Math.Ceiling(_context.Resumes.Where(e => e.StatusId == 2).Count() / (float)pageSize);
+                    ViewData["searchText"] = searchText;
                     ViewData["pageCount"] = pageCount;
                     return View(await applicationDbContext);
                 }
@@ -177,23 +219,14 @@ namespace CourseWork2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,DateCreated,Post,Info,EducationId,Salary,StatusId")] EmployerRequest EmployerRequest)
         {
-            //if (ModelState.IsValid)
-            //{
             IdentityUser identityUser = _userManager.GetUserAsync(HttpContext.User).Result;
-            //Account account = new Account();
-            //account = await _context.Accounts
-            //    .Include(a => a.EmployerRequest)
-            //    .FirstOrDefaultAsync(m => m.User == identityUser);
             EmployerRequest.DateCreated = DateTime.Now;
             EmployerRequest.Status = _context.Statuses.Find(1);
             EmployerRequest.User = _userManager.GetUserAsync(HttpContext.User).Result;
             EmployerRequest.Education = _context.Educations.Find(EmployerRequest.EducationId);
-            //account.EmployerRequest.Add(EmployerRequest);
-            //_context.Update(account);
             _context.Add(EmployerRequest);
             await _context.SaveChangesAsync();
             return RedirectToAction("Index", new { id = 1 });
-            //}
             ViewData["EducationId"] = new SelectList(_context.Educations, "Id", "Name", EmployerRequest.EducationId);
             ViewData["StatusId"] = new SelectList(_context.Statuses, "Id", "Name", EmployerRequest.StatusId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", EmployerRequest.UserId);

@@ -34,24 +34,6 @@ namespace CourseWork2.Controllers
         {
             return View();
         }
-        //[HttpGet("IndexForApplicant")]
-        //public async Task<IActionResult> IndexForApplicant()
-        //{
-        //    var applicationDbContext = _context.EmployerRequests.Include(e => e.Education);
-        //    return View(await applicationDbContext.ToListAsync());
-        //}
-        //[HttpGet("IndexForEmployer")]
-        //public async Task<IActionResult> IndexForEmployer()
-        //{
-        //    List<Resume> publishedResumes = new List<Resume>();
-        //        publishedResumes.Add(await _context.Resumes
-        //        .Include(r => r.Education)
-        //        .Include(r => r.Status)
-        //        .Include(r => r.User)
-        //        .FirstOrDefaultAsync(m => m.Status == _context.Statuses.FirstOrDefault(n => n.Id == 2)));
-
-        //    return View(publishedResumes);
-        //}
 
         public IActionResult Index()
         {

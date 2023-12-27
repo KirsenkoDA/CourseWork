@@ -25,13 +25,13 @@
         <button type="button" class="btn btn-success"><a class="text-white" asp-action="Create">Создать резюме</a></button>
     </p>
 }
-<button><a href="/Resumes/Index/@filteredValue?pageNumber=1">К списку резюме</a></button>
 @*Фильтр*@
-<form method="get" asp-action="Index">
+<form method="get" action="Index" class="form-inline ml-auto text-right">
     <input type="hidden" value="@filteredValue" name="Id" />
-    <input type="text" name="searchText" />
-    <input type="submit" value="Найти" />
+    <input class="form-control w-25 p-3" type="text" name="searchText" placeholder="Поиск" />
+    <input class="btn btn-dark" type="submit" value="Найти" />
 </form>
+<button class="btn btn-dark"><a style="text-decoration: none; color: white;" href="/Resumes/Index/@filteredValue?pageNumber=1">К списку резюме</a></button>
 <table class="table table-striped table-hover">
         @foreach (var item in Model)
         {
@@ -44,11 +44,7 @@
                     <b>Зарплата: @Html.DisplayFor(modelItem => item.Salary)</b>
             </td>
             <td>
-                @*@{
-                    var info = item.Info.Substring(0, 30);
-                }
-                @info*@
-                        @Html.DisplayFor(modelItem => item.Info)
+                    @Html.DisplayFor(modelItem => item.Info)
             </td>
             <td>
                     @{
@@ -104,7 +100,7 @@
         <ul class="pagination">
             @for (i = 0; i < pageCount; i++)
             {
-                <li class="page-item"><a class="page-link" href="/Resumes/Index?pageNumber=@k&searchText=@searchText">@k</a></li>
+                <li class="page-item"><a class="page-link text-black" href="/Resumes/Index?pageNumber=@k&searchText=@searchText">@k</a></li>
                 k++;
             }
         </ul>
@@ -116,7 +112,7 @@ else
         <ul class="pagination">
             @for (i = 0; i < pageCount; i++)
             {
-                <li class="page-item"><a class="page-link" href="/Resumes/Index/1?pageNumber=@k&searchText=@searchText">@k</a></li>
+                <li class="page-item"><a class="page-link text-black" href="/Resumes/Index/1?pageNumber=@k&searchText=@searchText">@k</a></li>
                 k++;
             }
         </ul>

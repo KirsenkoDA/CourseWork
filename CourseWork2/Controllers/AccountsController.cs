@@ -140,7 +140,7 @@ namespace CourseWork2.Controllers
             await _context.SaveChangesAsync();
         }
         // GET: Accounts/Edit/5
-        [Authorize(Roles = "MODERATOR")]
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Accounts == null)
@@ -161,7 +161,7 @@ namespace CourseWork2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "MODERATOR")]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Info")] Account account)
         {
             if (id != account.Id)

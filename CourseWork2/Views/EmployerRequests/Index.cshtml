@@ -7,6 +7,7 @@
     int filteredValue;
     int pageCount = (int)ViewData["pageCount"];
     int? currentPage = (int?)ViewData["currentPage"];
+    string? searchText = (string?)ViewData["searchText"];
 }
     @if (ViewData["filteredValues"] == null)
     {
@@ -25,6 +26,13 @@
         <button type="button" class="btn btn-success"><a class="text-white" asp-action="Create">Создать вакансию</a></button>
     </p>
 }
+@*Фильтр*@
+<form method="get" action="Index" class="form-inline ml-auto text-right">
+    <input type="hidden" value="@filteredValue" name="Id" />
+    <input class="form-control w-25 p-3" type="text" name="searchText" placeholder="Поиск" />
+    <input class="btn btn-dark" type="submit" value="Найти" />
+</form>
+<button class="btn btn-dark"><a style="text-decoration: none; color: white;" href="/EmployerRequests/Index/@filteredValue?pageNumber=1">К списку вакансий</a></button>
 <table class="table table-striped table-hover">
 @foreach (var item in Model) {
         <tr>
@@ -97,7 +105,7 @@
         <ul class="pagination">
             @for (i = 0; i < pageCount; i++)
             {
-                <li class="page-item"><a class="page-link" href="/EmployerRequests/Index?pageNumber=@k">@k</a></li>
+                <li class="page-item"><a class="page-link text-black" href="/EmployerRequests/Index?pageNumber=@k&searchText=@searchText">@k</a></li>
                 k++;
             }
         </ul>
@@ -109,7 +117,7 @@ else
         <ul class="pagination">
             @for (i = 0; i < pageCount; i++)
             {
-                <li class="page-item"><a class="page-link" href="/EmployerRequests/Index/1?pageNumber=@k">@k</a></li>
+                <li class="page-item"><a class="page-link text-black" href="/EmployerRequests/Index/1?pageNumber=@k&searchText=@searchText">@k</a></li>
                 k++;
             }
         </ul>
